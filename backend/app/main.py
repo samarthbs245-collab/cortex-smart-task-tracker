@@ -13,14 +13,14 @@ from app.routers.tasks import router as tasks_router
 
 
 # ============================================================
-# CREATE DATABASE TABLES
+# DATABASE
 # ============================================================
 
 Base.metadata.create_all(bind=engine)
 
 
 # ============================================================
-# CREATE FASTAPI APP
+# FASTAPI APPLICATION
 # ============================================================
 
 app = FastAPI(
@@ -36,43 +36,28 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-
-    # Allow local frontend
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "http://127.0.0.1:5501",
-        "http://localhost:5501",
     ],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
 
 
 # ============================================================
-# AUTHENTICATION ROUTER
+# ROUTERS
 # ============================================================
 
-app.include_router(
-    auth_router,
-)
-
-
-# ============================================================
-# TASK ROUTER
-# ============================================================
-
-app.include_router(
-    tasks_router,
-)
+app.include_router(auth_router)
+app.include_router(tasks_router)
 
 
 # ============================================================
-# ROOT ENDPOINT
+# ROOT
 # ============================================================
 
 @app.get("/")
@@ -85,7 +70,7 @@ def root():
 
 
 # ============================================================
-# HEALTH CHECK
+# HEALTH
 # ============================================================
 
 @app.get("/health")
