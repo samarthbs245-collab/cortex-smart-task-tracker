@@ -1,4 +1,4 @@
-const API_URL = "https://cortex-rqzd.onrender.com";
+const API_URL = "https://cortex-rgzd.onrender.com";
 
 const token = localStorage.getItem("access_token");
 
