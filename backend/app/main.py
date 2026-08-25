@@ -7,6 +7,7 @@ from app.database import Base, engine
 from app.models.user import User
 from app.models.task import Task
 
+# Import routers
 from app.routers.auth import router as auth_router
 from app.routers.tasks import router as tasks_router
 
@@ -19,7 +20,7 @@ Base.metadata.create_all(bind=engine)
 
 
 # ============================================================
-# CORTEX APPLICATION
+# CREATE FASTAPI APPLICATION
 # ============================================================
 
 app = FastAPI(
@@ -38,6 +39,9 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
+
+        # Render frontend/backend access
+        "https://cortex-rqzd.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -64,7 +68,7 @@ app.include_router(
 
 
 # ============================================================
-# ROOT
+# ROOT ROUTE
 # ============================================================
 
 @app.get("/")
@@ -84,4 +88,18 @@ def root():
 def health_check():
     return {
         "status": "healthy",
+        "service": "CORTEX API",
+    }
+
+
+# ============================================================
+# API STATUS
+# ============================================================
+
+@app.get("/api")
+def api_status():
+    return {
+        "message": "CORTEX API is working",
+        "authentication": "available",
+        "tasks": "available",
     }
