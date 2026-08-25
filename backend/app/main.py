@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 
-# Import models so SQLAlchemy knows about the tables
+# Import models
 from app.models.user import User
 from app.models.task import Task
 
@@ -20,7 +20,7 @@ Base.metadata.create_all(bind=engine)
 
 
 # ============================================================
-# CREATE FASTAPI APPLICATION
+# CREATE FASTAPI APP
 # ============================================================
 
 app = FastAPI(
@@ -36,13 +36,19 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+
+    # Allow local frontend
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "https://cortex-rqzd.onrender.com",
+        "http://127.0.0.1:5501",
+        "http://localhost:5501",
     ],
+
     allow_credentials=True,
+
     allow_methods=["*"],
+
     allow_headers=["*"],
 )
 
@@ -79,7 +85,7 @@ def root():
 
 
 # ============================================================
-# HEALTH CHECK ENDPOINT
+# HEALTH CHECK
 # ============================================================
 
 @app.get("/health")
