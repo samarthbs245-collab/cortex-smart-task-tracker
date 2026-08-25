@@ -39,8 +39,6 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-
-        # Render frontend/backend access
         "https://cortex-rqzd.onrender.com",
     ],
     allow_credentials=True,
@@ -68,7 +66,7 @@ app.include_router(
 
 
 # ============================================================
-# ROOT ROUTE
+# ROOT ENDPOINT
 # ============================================================
 
 @app.get("/")
@@ -81,7 +79,7 @@ def root():
 
 
 # ============================================================
-# HEALTH CHECK
+# HEALTH CHECK ENDPOINT
 # ============================================================
 
 @app.get("/health")
@@ -89,17 +87,4 @@ def health_check():
     return {
         "status": "healthy",
         "service": "CORTEX API",
-    }
-
-
-# ============================================================
-# API STATUS
-# ============================================================
-
-@app.get("/api")
-def api_status():
-    return {
-        "message": "CORTEX API is working",
-        "authentication": "available",
-        "tasks": "available",
     }
