@@ -5,14 +5,29 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.services.auth_service import SECRET_KEY, ALGORITHM
+from app.services.auth_service import (
+    ALGORITHM,
+    SECRET_KEY,
+)
 
 
-security = HTTPBearer()
+# ============================================================
+# HTTP BEARER SECURITY
+# ============================================================
 
+security = HTTPBearer(
+    auto_error=True,
+)
+
+
+# ============================================================
+# GET CURRENT USER
+# ============================================================
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(
+        security
+    ),
     db: Session = Depends(get_db),
 ) -> User:
 
@@ -31,19 +46,37 @@ def get_current_user(
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication token.",
+                headers={
+                    "WWW-Authenticate": "Bearer"
+                },
             )
 
-        user_id = int(user_id)
+        try:
+            user_id = int(user_id)
 
-    except (JWTError, ValueError, TypeError):
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token.",
+                headers={
+                    "WWW-Authenticate": "Bearer"
+                },
+            )
+
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired authentication token.",
+            headers={
+                "WWW-Authenticate": "Bearer"
+            },
         )
 
     user = (
         db.query(User)
-        .filter(User.id == user_id)
+        .filter(
+            User.id == user_id
+        )
         .first()
     )
 
@@ -51,6 +84,9 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found.",
+            headers={
+                "WWW-Authenticate": "Bearer"
+            },
         )
 
     return user

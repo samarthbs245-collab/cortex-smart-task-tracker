@@ -9,19 +9,11 @@ from app.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    # ============================================================
-    # USER ID
-    # ============================================================
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         index=True,
     )
-
-    # ============================================================
-    # BASIC INFORMATION
-    # ============================================================
 
     name: Mapped[str] = mapped_column(
         String(100),
@@ -40,10 +32,6 @@ class User(Base):
         nullable=False,
     )
 
-    # ============================================================
-    # PERSONALIZATION INFORMATION
-    # ============================================================
-
     age: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
@@ -59,19 +47,32 @@ class User(Base):
         nullable=True,
     )
 
-    # ============================================================
-    # ACCOUNT CREATION TIME
-    # ============================================================
+    theme: Mapped[str] = mapped_column(
+        String(20),
+        default="dark",
+        nullable=False,
+    )
+
+    avatar_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
+    reset_token_hash: Mapped[str | None] = mapped_column(
+        String(128),
+        nullable=True,
+    )
+
+    reset_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
         nullable=False,
     )
-
-    # ============================================================
-    # TASK RELATIONSHIP
-    # ============================================================
 
     tasks = relationship(
         "Task",

@@ -48,6 +48,24 @@ class Task(Base):
         nullable=True,
     )
 
+    # AI-generated priority suggestion
+    ai_priority: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+
+    # AI explanation for the suggested priority
+    ai_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    # Used for reminder tracking
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -61,7 +79,16 @@ class Task(Base):
         nullable=False,
     )
 
+    # User relationship
     user = relationship(
         "User",
         back_populates="tasks",
+    )
+
+    # Subtask relationship
+    subtasks = relationship(
+        "Subtask",
+        back_populates="task",
+        cascade="all, delete-orphan",
+        order_by="Subtask.position",
     )

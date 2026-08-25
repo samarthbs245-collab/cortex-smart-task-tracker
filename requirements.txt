@@ -4,10 +4,8 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 python-jose[cryptography]
-passlib[bcrypt]
-bcrypt
-Werkzeug
+werkzeug
 pydantic
 pydantic[email]
 python-multipart
-google-generativeai
+google-genai
