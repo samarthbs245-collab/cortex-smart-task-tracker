@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 
-# Import models
+# Import models so SQLAlchemy knows about the tables
 from app.models.user import User
 from app.models.task import Task
 
@@ -13,14 +13,14 @@ from app.routers.tasks import router as tasks_router
 
 
 # ============================================================
-# DATABASE
+# CREATE DATABASE TABLES
 # ============================================================
 
 Base.metadata.create_all(bind=engine)
 
 
 # ============================================================
-# FASTAPI APPLICATION
+# CREATE FASTAPI APPLICATION
 # ============================================================
 
 app = FastAPI(
@@ -36,28 +36,33 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
 )
 
 
 # ============================================================
-# ROUTERS
+# AUTHENTICATION ROUTER
 # ============================================================
 
-app.include_router(auth_router)
-app.include_router(tasks_router)
+app.include_router(
+    auth_router,
+)
 
 
 # ============================================================
-# ROOT
+# TASK ROUTER
+# ============================================================
+
+app.include_router(
+    tasks_router,
+)
+
+
+# ============================================================
+# ROOT ENDPOINT
 # ============================================================
 
 @app.get("/")
@@ -70,7 +75,7 @@ def root():
 
 
 # ============================================================
-# HEALTH
+# HEALTH CHECK
 # ============================================================
 
 @app.get("/health")
