@@ -2976,3 +2976,37 @@ body.light-theme .stat-card {
         max-width: none;
     }
 }
+/* CORTEX HERO LOGO */
+
+.hero-orb {
+    position: relative;
+    width: 320px;
+    height: 320px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+.cortex-hero-logo {
+    width: 280px;
+    height: 280px;
+
+    object-fit: contain;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    z-index: 2;
+
+    display: block;
+
+    filter:
+        drop-shadow(0 0 15px rgba(125, 92, 255, 0.45))
+        drop-shadow(0 0 30px rgba(0, 190, 255, 0.30));
+}
