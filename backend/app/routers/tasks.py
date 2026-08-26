@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import or_
+from sqlalchemy import or_, case
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,6 +19,10 @@ from app.schemas.task import (
 from app.services.auth_dependency import get_current_user
 
 
+# ============================================================
+# ROUTER
+# ============================================================
+
 router = APIRouter(
     prefix="/api/tasks",
     tags=["Tasks"],
@@ -26,7 +30,96 @@ router = APIRouter(
 
 
 # ============================================================
-# HELPER — GET CURRENT USER'S TASK
+# CONSTANTS
+# ============================================================
+
+VALID_STATUSES = {
+    "todo",
+    "in_progress",
+    "done",
+}
+
+VALID_PRIORITIES = {
+    "low",
+    "medium",
+    "high",
+    "urgent",
+}
+
+
+# ============================================================
+# STATUS NORMALIZER
+# ============================================================
+
+def normalize_status(value: str) -> str:
+    """
+    Keep one canonical representation everywhere:
+        todo
+        in_progress
+        done
+    """
+
+    value = (
+        str(value)
+        .strip()
+        .lower()
+        .replace("-", "_")
+        .replace(" ", "_")
+    )
+
+    aliases = {
+        "to_do": "todo",
+        "todo": "todo",
+        "in_progress": "in_progress",
+        "inprogress": "in_progress",
+        "progress": "in_progress",
+        "done": "done",
+        "completed": "done",
+        "complete": "done",
+    }
+
+    normalized = aliases.get(
+        value,
+        value,
+    )
+
+    if normalized not in VALID_STATUSES:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Status must be todo, "
+                "in_progress, or done."
+            ),
+        )
+
+    return normalized
+
+
+# ============================================================
+# PRIORITY NORMALIZER
+# ============================================================
+
+def normalize_priority(value: str) -> str:
+    value = (
+        str(value)
+        .strip()
+        .lower()
+    )
+
+    if value not in VALID_PRIORITIES:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Priority must be low, medium, "
+                "high, or urgent."
+            ),
+        )
+
+    return value
+
+
+# ============================================================
+# HELPER — GET USER'S OWN TASK
 # ============================================================
 
 def _get_owned_task(
@@ -65,18 +158,36 @@ def _get_owned_task(
 def create_task(
     data: TaskCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
+    title = data.title.strip()
+
+    if not title:
+        raise HTTPException(
+            status_code=422,
+            detail="Task title is required.",
+        )
+
+    priority = normalize_priority(
+        data.priority
+    )
+
+    status_value = normalize_status(
+        data.status
+    )
+
     task = Task(
-        title=data.title.strip(),
+        title=title,
         description=(
             data.description.strip()
             if data.description
             else None
         ),
-        priority=data.priority,
-        status=data.status,
+        priority=priority,
+        status=status_value,
         due_date=data.due_date,
         user_id=current_user.id,
     )
@@ -84,16 +195,24 @@ def create_task(
     db.add(task)
     db.flush()
 
+    # --------------------------------------------------------
+    # CREATE SUBTASKS
+    # --------------------------------------------------------
+
     for index, subtask_data in enumerate(
         data.subtasks
     ):
-        title = subtask_data.title.strip()
 
-        if title:
+        subtask_title = (
+            subtask_data.title.strip()
+        )
+
+        if subtask_title:
+
             db.add(
                 Subtask(
                     task_id=task.id,
-                    title=title,
+                    title=subtask_title,
                     position=index,
                 )
             )
@@ -114,15 +233,23 @@ def create_task(
 )
 def get_tasks(
     search: str | None = None,
+
     status_filter: str = Query(
         "all",
         alias="status",
     ),
+
     priority: str = "all",
+
     due: str = "all",
+
     sort: str = "newest",
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     query = (
@@ -132,9 +259,9 @@ def get_tasks(
         )
     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # SEARCH
-    # --------------------------------------------------------
+    # ========================================================
 
     if search and search.strip():
 
@@ -153,43 +280,41 @@ def get_tasks(
             )
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # STATUS FILTER
-    # --------------------------------------------------------
+    # ========================================================
 
     if status_filter != "all":
 
         normalized_status = (
-            status_filter
-            .lower()
-            .strip()
-            .replace("_", "-")
+            normalize_status(
+                status_filter
+            )
         )
 
         query = query.filter(
             Task.status == normalized_status
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # PRIORITY FILTER
-    # --------------------------------------------------------
+    # ========================================================
 
     if priority != "all":
 
         normalized_priority = (
-            priority
-            .lower()
-            .strip()
+            normalize_priority(
+                priority
+            )
         )
 
         query = query.filter(
-            Task.priority
-            == normalized_priority
+            Task.priority == normalized_priority
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # DUE DATE FILTER
-    # --------------------------------------------------------
+    # ========================================================
 
     now = datetime.now()
 
@@ -217,17 +342,19 @@ def get_tasks(
         query = query.filter(
             Task.due_date >= start_of_today,
             Task.due_date < start_of_tomorrow,
+            Task.status != "done",
         )
 
     elif due == "upcoming":
 
         query = query.filter(
             Task.due_date >= now,
+            Task.status != "done",
         )
 
-    # --------------------------------------------------------
+    # ========================================================
     # SORTING
-    # --------------------------------------------------------
+    # ========================================================
 
     if sort == "due":
 
@@ -237,9 +364,6 @@ def get_tasks(
         )
 
     elif sort == "priority":
-
-        # Explicit ordering instead of alphabetical sorting.
-        from sqlalchemy import case
 
         priority_order = case(
             {
@@ -282,7 +406,9 @@ def get_tasks(
 )
 def get_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     tasks = (
@@ -315,7 +441,7 @@ def get_stats(
     )
 
     in_progress = sum(
-        task.status == "in-progress"
+        task.status == "in_progress"
         for task in tasks
     )
 
@@ -380,7 +506,9 @@ def get_stats(
 )
 def get_reminders(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     now = datetime.now()
@@ -427,6 +555,38 @@ def get_reminders(
 
 
 # ============================================================
+# ✅ COMPLETE TASK
+# ============================================================
+
+@router.post(
+    "/{task_id}/complete",
+    response_model=TaskResponse,
+)
+def complete_task(
+    task_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+
+    task = _get_owned_task(
+        task_id,
+        db,
+        current_user.id,
+    )
+
+    task.status = "done"
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+
+# ============================================================
 # GET SINGLE TASK
 # ============================================================
 
@@ -436,8 +596,12 @@ def get_reminders(
 )
 def get_task(
     task_id: int,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     return _get_owned_task(
@@ -457,9 +621,14 @@ def get_task(
 )
 def update_task(
     task_id: int,
+
     data: TaskUpdate,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     task = _get_owned_task(
@@ -472,40 +641,61 @@ def update_task(
         exclude_unset=True
     )
 
+    # ========================================================
+    # VALIDATE + NORMALIZE
+    # ========================================================
+
+    if "title" in update_data:
+
+        if update_data["title"] is None:
+
+            raise HTTPException(
+                status_code=422,
+                detail="Task title cannot be empty.",
+            )
+
+        update_data["title"] = (
+            update_data["title"]
+            .strip()
+        )
+
+        if not update_data["title"]:
+
+            raise HTTPException(
+                status_code=422,
+                detail="Task title cannot be empty.",
+            )
+
+    if "description" in update_data:
+
+        if update_data["description"]:
+
+            update_data["description"] = (
+                update_data["description"]
+                .strip()
+            )
+
+    if "status" in update_data:
+
+        update_data["status"] = (
+            normalize_status(
+                update_data["status"]
+            )
+        )
+
+    if "priority" in update_data:
+
+        update_data["priority"] = (
+            normalize_priority(
+                update_data["priority"]
+            )
+        )
+
+    # ========================================================
+    # UPDATE
+    # ========================================================
+
     for field, value in update_data.items():
-
-        if (
-            field == "title"
-            and value is not None
-        ):
-            value = value.strip()
-
-        if (
-            field == "description"
-            and value is not None
-        ):
-            value = value.strip()
-
-        if (
-            field == "status"
-            and value is not None
-        ):
-            value = (
-                value
-                .lower()
-                .strip()
-                .replace("_", "-")
-            )
-
-        if (
-            field == "priority"
-            and value is not None
-        ):
-            value = (
-                value
-                .lower()
-                .strip()
-            )
 
         setattr(
             task,
@@ -528,8 +718,12 @@ def update_task(
 )
 def delete_task(
     task_id: int,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     task = _get_owned_task(
@@ -557,9 +751,14 @@ def delete_task(
 )
 def add_subtask(
     task_id: int,
+
     data: SubtaskCreate,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     task = _get_owned_task(
@@ -572,9 +771,18 @@ def add_subtask(
         task.subtasks
     )
 
+    title = data.title.strip()
+
+    if not title:
+
+        raise HTTPException(
+            status_code=422,
+            detail="Subtask title is required.",
+        )
+
     subtask = Subtask(
         task_id=task.id,
-        title=data.title.strip(),
+        title=title,
         position=position,
     )
 
@@ -594,10 +802,16 @@ def add_subtask(
 )
 def update_subtask(
     subtask_id: int,
+
     completed: bool | None = None,
+
     title: str | None = None,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     subtask = (
@@ -611,19 +825,28 @@ def update_subtask(
     )
 
     if not subtask:
+
         raise HTTPException(
             status_code=404,
             detail="Subtask not found.",
         )
 
     if completed is not None:
+
         subtask.completed = completed
 
     if title is not None:
+
         cleaned_title = title.strip()
 
-        if cleaned_title:
-            subtask.title = cleaned_title
+        if not cleaned_title:
+
+            raise HTTPException(
+                status_code=422,
+                detail="Subtask title cannot be empty.",
+            )
+
+        subtask.title = cleaned_title
 
     db.commit()
     db.refresh(subtask)
@@ -645,8 +868,12 @@ def update_subtask(
 )
 def delete_subtask(
     subtask_id: int,
+
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+
+    current_user: User = Depends(
+        get_current_user
+    ),
 ):
 
     subtask = (
@@ -660,6 +887,7 @@ def delete_subtask(
     )
 
     if not subtask:
+
         raise HTTPException(
             status_code=404,
             detail="Subtask not found.",

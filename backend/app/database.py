@@ -58,62 +58,109 @@ def get_db():
 
     try:
         yield db
-
     finally:
         db.close()
 
 
 # ============================================================
-# SMALL DATABASE MIGRATION
+# DATABASE MIGRATION
 # ============================================================
 
 def migrate_schema():
     """
-    Idempotent migration for existing CORTEX PostgreSQL
-    databases.
+    Safely update an existing PostgreSQL database.
 
-    This adds new columns required by the upgraded version
-    without deleting existing users or tasks.
+    Existing users and tasks are preserved.
+
+    Email verification is not used.
+    Password reset, profile, AI and reminder fields
+    are maintained.
     """
 
     if engine.dialect.name != "postgresql":
         return
 
     statements = [
+
+        # ====================================================
+        # USER — PASSWORD RESET
+        # ====================================================
+
         """
         ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS reset_token_hash VARCHAR(128)
+        ADD COLUMN IF NOT EXISTS
+        reset_token_hash VARCHAR(128)
         """,
+
         """
         ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMP
+        ADD COLUMN IF NOT EXISTS
+        reset_token_expires_at TIMESTAMP
         """,
+
+        # ====================================================
+        # USER — PROFILE
+        # ====================================================
+
         """
         ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS theme VARCHAR(20)
+        ADD COLUMN IF NOT EXISTS
+        theme VARCHAR(20)
         DEFAULT 'dark'
         """,
+
         """
         ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)
+        ADD COLUMN IF NOT EXISTS
+        avatar_url VARCHAR(500)
         """,
+
+        # ====================================================
+        # TASK — AI
+        # ====================================================
+
         """
         ALTER TABLE tasks
-        ADD COLUMN IF NOT EXISTS ai_priority VARCHAR(20)
+        ADD COLUMN IF NOT EXISTS
+        ai_priority VARCHAR(20)
         """,
+
         """
         ALTER TABLE tasks
-        ADD COLUMN IF NOT EXISTS ai_reason TEXT
+        ADD COLUMN IF NOT EXISTS
+        ai_reason TEXT
         """,
+
+        # ====================================================
+        # TASK — REMINDERS
+        # ====================================================
+
         """
         ALTER TABLE tasks
-        ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMP
+        ADD COLUMN IF NOT EXISTS
+        reminder_sent_at TIMESTAMP
         """,
+
     ]
+
 
     with engine.begin() as connection:
 
         for statement in statements:
+
             connection.execute(
                 text(statement)
             )
+
+
+# ============================================================
+# INITIALIZE DATABASE
+# ============================================================
+
+def initialize_database():
+
+    migrate_schema()
+
+    Base.metadata.create_all(
+        bind=engine
+    )

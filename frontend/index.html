@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -10,16 +12,21 @@
 
     <meta
         name="description"
-        content="CORTEX — AI-powered personal task intelligence"
+        content="CORTEX — AI-powered intelligent task management workspace."
     >
 
-    <title>CORTEX — Smart Task Intelligence</title>
+    <title>CORTEX — Intelligent Task Workspace</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
         rel="stylesheet"
     >
 
@@ -27,199 +34,336 @@
         rel="stylesheet"
         href="style.css"
     >
+
 </head>
+
 
 <body>
 
-    <!-- Background -->
-    <div class="background-grid"></div>
+
+    <!-- =====================================================
+         CORTEX AI SPLASH SCREEN
+    ====================================================== -->
+
+    <div
+        id="cortex-splash"
+        class="cortex-splash"
+    >
+
+        <div class="splash-glow"></div>
+
+        <div class="splash-content">
+
+
+            <!-- BRAIN + INFINITY LOGO -->
+
+            <div class="splash-logo">
+
+                <img
+                    src="assets/cortex-brain-infinity-logo.png"
+                    alt="CORTEX AI"
+                    class="cortex-logo-image"
+                >
+
+            </div>
+
+
+            <div class="splash-brand">
+                CORTEX
+            </div>
+
+
+            <div class="splash-tagline">
+                AI SMART TASK TRACKER
+            </div>
+
+
+            <!-- LOADING -->
+
+            <div class="splash-loader">
+
+                <div class="loader-track">
+
+                    <div
+                        class="loader-progress"
+                    ></div>
+
+                </div>
+
+                <div class="loader-info">
+
+                    <span>
+                        INITIALIZING INTELLIGENCE...
+                    </span>
+
+                    <span
+                        id="loading-percent"
+                    >
+                        0%
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="splash-dots">
+
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         BACKGROUND
+    ====================================================== -->
 
     <div class="ambient ambient-one"></div>
+
     <div class="ambient ambient-two"></div>
 
 
-    <main class="auth-layout">
+    <!-- =====================================================
+         MAIN APPLICATION
+    ====================================================== -->
 
-        <!-- LEFT BRAND PANEL -->
+    <main class="auth-shell">
 
-        <section class="brand-panel">
 
-            <div class="brand-logo">
-                <div class="logo-mark">
-                    C
+        <!-- =================================================
+             LEFT BRAND PANEL
+        ================================================== -->
+
+        <section class="brand-pane">
+
+
+            <div class="brand">
+
+
+                <div class="brand-logo">
+
+                    <img
+                        src="assets/cortex-brain-infinity-logo.png"
+                        alt="CORTEX AI"
+                    >
+
                 </div>
 
-                <span>CORTEX</span>
+
+                <span>
+                    CORTEX
+                </span>
+
+
             </div>
 
 
-            <div class="brand-content">
+            <div class="hero-copy">
+
 
                 <span class="eyebrow">
-                    AI-POWERED TASK INTELLIGENCE
+                    AI PRODUCTIVITY WORKSPACE
                 </span>
+
 
                 <h1>
-                    Think less.
-                    <span>Achieve more.</span>
-                </h1>
 
-                <p>
-                    CORTEX transforms your tasks into
-                    intelligent priorities built around
-                    your goals, time and personal context.
-                </p>
-
-            </div>
-
-
-            <div class="intelligence-card">
-
-                <div class="pulse-dot"></div>
-
-                <div>
-                    <strong>
-                        Personal intelligence
-                    </strong>
+                    Think clearly.<br>
 
                     <span>
-                        Adapts to your goals and workload
+                        Work smarter.
                     </span>
+
+                </h1>
+
+
+                <p>
+
+                    CORTEX combines intelligent
+                    task management, planning,
+                    priorities and an active AI
+                    copilot in one focused workspace.
+
+                </p>
+
+
+                <div class="feature-row">
+
+                    <span>
+                        ✦ AI planning
+                    </span>
+
+                    <span>
+                        ◫ Smart tasks
+                    </span>
+
+                    <span>
+                        ◷ Deadlines
+                    </span>
+
+                    <span>
+                        🔒 Secure accounts
+                    </span>
+
                 </div>
 
-            </div>
-
-
-            <div class="brand-footer">
-
-                <span>
-                    © 2026 CORTEX
-                </span>
-
-                <span>
-                    Intelligent productivity
-                </span>
 
             </div>
+
+
+            <!-- CORTEX AI STATUS -->
+
+            <div class="status-pill">
+
+                <span class="status-dot"></span>
+
+                CORTEX AI
+
+            </div>
+
 
         </section>
 
 
-        <!-- RIGHT AUTH PANEL -->
+        <!-- =================================================
+             RIGHT AUTH PANEL
+        ================================================== -->
 
-        <section class="auth-panel">
+        <section class="auth-pane">
 
-            <!-- LOGIN -->
+
+            <!-- =================================================
+                 LOGIN
+            ================================================== -->
 
             <div
-                id="login-section"
                 class="auth-card"
+                id="login-section"
             >
 
+
+                <!-- MOBILE BRAND -->
+
                 <div class="mobile-brand">
-                    <div class="logo-mark">
-                        C
+
+                    <div class="mobile-logo">
+
+                        <img
+                            src="assets/cortex-brain-infinity-logo.png"
+                            alt="CORTEX AI"
+                        >
+
                     </div>
 
-                    <span>CORTEX</span>
-                </div>
-
-
-                <div class="auth-heading">
-
-                    <span class="small-label">
-                        WELCOME BACK
+                    <span>
+                        CORTEX
                     </span>
 
-                    <h2>
-                        Sign in to CORTEX
-                    </h2>
-
-                    <p>
-                        Continue where your intelligence left off.
-                    </p>
-
                 </div>
 
 
-                <form id="login-form">
+                <span class="small-label">
+                    WELCOME BACK
+                </span>
 
-                    <div class="form-group">
 
-                        <label for="login-email">
-                            Email address
-                        </label>
+                <h2>
+                    Sign in to CORTEX
+                </h2>
 
-                        <div class="input-wrapper">
 
-                            <span class="input-icon">
-                                @
-                            </span>
+                <p class="muted">
+                    Continue where your intelligence left off.
+                </p>
+
+
+                <form
+                    id="login-form"
+                    autocomplete="on"
+                >
+
+
+                    <!-- EMAIL -->
+
+                    <label>
+
+                        Email
+
+                        <input
+                            id="login-email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="you@gmail.com"
+                            required
+                        >
+
+                    </label>
+
+
+                    <small
+                        id="login-email-error"
+                        class="field-error"
+                    ></small>
+
+
+                    <!-- PASSWORD -->
+
+                    <label>
+
+                        Password
+
+                        <div class="password-row">
 
                             <input
-                                type="email"
-                                id="login-email"
-                                placeholder="you@example.com"
-                                autocomplete="email"
+                                id="login-password"
+                                type="password"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
                                 required
                             >
 
-                        </div>
-
-                        <small
-                            id="login-email-error"
-                            class="error-message"
-                        ></small>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <div class="label-row">
-
-                            <label for="login-password">
-                                Password
-                            </label>
-
                             <button
                                 type="button"
-                                class="forgot-button"
+                                class="ghost-icon"
+                                data-toggle-password="login-password"
                             >
-                                Forgot password?
+                                ◉
                             </button>
 
                         </div>
 
-                        <div class="input-wrapper">
+                    </label>
 
-                            <span class="input-icon">
-                                •••
-                            </span>
 
-                            <input
-                                type="password"
-                                id="login-password"
-                                placeholder="Enter your password"
-                                autocomplete="current-password"
-                                required
-                            >
+                    <div class="form-line">
 
-                        </div>
+                        <button
+                            type="button"
+                            id="forgot-password-button"
+                            class="link-button"
+                        >
+                            Forgot password?
+                        </button>
 
                     </div>
 
 
                     <button
-                        type="submit"
                         class="primary-button"
+                        type="submit"
                     >
 
-                        <span>
-                            Sign in
-                        </span>
+                        Sign in
 
-                        <span class="button-arrow">
+                        <span>
                             →
                         </span>
 
@@ -231,16 +375,43 @@
                         class="form-message"
                     ></p>
 
+
                 </form>
 
 
+                <!-- SECURITY -->
+
+                <div class="security-assurance">
+
+                    <div class="security-icon">
+                        🔒
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Your security matters
+                        </strong>
+
+                        <p>
+                            CORTEX uses secure HTTPS
+                            connections and strong
+                            password hashing.
+                            Your password is never
+                            stored in readable form.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
                 <div class="divider">
-                    <span>NEW TO CORTEX?</span>
+                    NEW TO CORTEX?
                 </div>
 
 
                 <button
-                    type="button"
                     id="show-register"
                     class="secondary-button"
                 >
@@ -248,182 +419,182 @@
                 </button>
 
 
-                <p class="security-note">
-                    🔒 Your information is securely protected.
-                </p>
-
             </div>
 
 
-            <!-- REGISTER -->
+            <!-- =================================================
+                 REGISTER
+            ================================================== -->
 
             <div
-                id="register-section"
                 class="auth-card hidden"
+                id="register-section"
             >
 
-                <div class="mobile-brand">
 
-                    <div class="logo-mark">
-                        C
-                    </div>
-
-                    <span>CORTEX</span>
-
-                </div>
+                <span class="small-label">
+                    GET STARTED
+                </span>
 
 
-                <div class="auth-heading">
+                <h2>
+                    Create your CORTEX
+                </h2>
 
-                    <span class="small-label">
-                        GET STARTED
-                    </span>
 
-                    <h2>
-                        Create your CORTEX
-                    </h2>
-
-                    <p>
-                        Tell us a little about yourself so
-                        CORTEX can work smarter for you.
-                    </p>
-
-                </div>
+                <p class="muted">
+                    Build a personal workspace tuned to your goals.
+                </p>
 
 
                 <form id="register-form">
 
-                    <div class="form-group">
 
-                        <label for="register-name">
-                            Full name
-                        </label>
+                    <!-- NAME -->
 
-                        <div class="input-wrapper">
+                    <label>
 
-                            <span class="input-icon">
-                                ◉
-                            </span>
+                        Full name
 
-                            <input
-                                type="text"
-                                id="register-name"
-                                placeholder="Your name"
-                                autocomplete="name"
-                                required
-                            >
+                        <input
+                            id="register-name"
+                            type="text"
+                            minlength="2"
+                            maxlength="100"
+                            placeholder="Your name"
+                            autocomplete="name"
+                            required
+                        >
 
-                        </div>
-
-                    </div>
+                    </label>
 
 
-                    <div class="form-group">
+                    <!-- EMAIL -->
 
-                        <label for="register-email">
-                            Email address
-                        </label>
+                    <label>
 
-                        <div class="input-wrapper">
+                        Email
 
-                            <span class="input-icon">
-                                @
-                            </span>
+                        <input
+                            id="register-email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="you@gmail.com"
+                            required
+                        >
 
-                            <input
-                                type="email"
-                                id="register-email"
-                                placeholder="you@example.com"
-                                autocomplete="email"
-                                required
-                            >
-
-                        </div>
-
-                        <small
-                            id="register-email-error"
-                            class="error-message"
-                        ></small>
-
-                    </div>
+                    </label>
 
 
-                    <div class="form-group">
+                    <small
+                        id="register-email-error"
+                        class="field-error"
+                    ></small>
 
-                        <label for="register-password">
-                            Password
-                        </label>
 
-                        <div class="input-wrapper">
+                    <!-- PASSWORD -->
 
-                            <span class="input-icon">
-                                •••
-                            </span>
+                    <label>
+
+                        Password
+
+                        <div class="password-row">
 
                             <input
-                                type="password"
                                 id="register-password"
-                                placeholder="At least 8 characters"
-                                autocomplete="new-password"
+                                type="password"
                                 minlength="8"
+                                maxlength="128"
+                                placeholder="Create a strong password"
+                                autocomplete="new-password"
                                 required
                             >
 
+                            <button
+                                type="button"
+                                class="ghost-icon"
+                                data-toggle-password="register-password"
+                            >
+                                ◉
+                            </button>
+
+                        </div>
+
+                    </label>
+
+
+                    <!-- PASSWORD STRENGTH -->
+
+                    <div class="password-strength">
+
+                        <div class="strength-track">
+
+                            <div
+                                id="password-strength-bar"
+                                class="strength-bar"
+                            ></div>
+
+                        </div>
+
+
+                        <div
+                            id="password-strength-text"
+                            class="strength-text"
+                        >
+                            Use 8+ characters with uppercase,
+                            lowercase, number and symbol.
                         </div>
 
                     </div>
 
 
-                    <div class="two-column">
+                    <!-- AGE / HOURS -->
 
-                        <div class="form-group">
+                    <div class="grid2">
 
-                            <label for="register-age">
-                                Age
-                            </label>
+                        <label>
+
+                            Age
 
                             <input
-                                type="number"
                                 id="register-age"
+                                type="number"
                                 min="13"
                                 max="120"
-                                placeholder="21"
                                 required
                             >
 
-                        </div>
+                        </label>
 
 
-                        <div class="form-group">
+                        <label>
 
-                            <label for="register-hours">
-                                Hours / day
-                            </label>
+                            Hours/day
 
                             <input
-                                type="number"
                                 id="register-hours"
+                                type="number"
                                 min="0"
                                 max="24"
                                 step="0.5"
-                                placeholder="4"
+                                placeholder="6"
                             >
 
-                        </div>
+                        </label>
 
                     </div>
 
 
-                    <div class="form-group">
+                    <!-- GOAL -->
 
-                        <label for="register-goal">
-                            Primary focus
-                        </label>
+                    <label>
+
+                        Primary focus
 
                         <select id="register-goal">
 
                             <option value="">
-                                Choose your focus
+                                Choose one
                             </option>
 
                             <option value="Studies">
@@ -434,12 +605,16 @@
                                 Work
                             </option>
 
-                            <option value="Career">
-                                Career
+                            <option value="Projects">
+                                Projects
+                            </option>
+
+                            <option value="Fitness">
+                                Fitness
                             </option>
 
                             <option value="Personal">
-                                Personal growth
+                                Personal
                             </option>
 
                             <option value="Other">
@@ -448,19 +623,19 @@
 
                         </select>
 
-                    </div>
+                    </label>
 
+
+                    <!-- CREATE -->
 
                     <button
-                        type="submit"
                         class="primary-button"
+                        type="submit"
                     >
 
-                        <span>
-                            Create CORTEX account
-                        </span>
+                        Create CORTEX
 
-                        <span class="button-arrow">
+                        <span>
                             →
                         </span>
 
@@ -472,23 +647,133 @@
                         class="form-message"
                     ></p>
 
+
                 </form>
 
 
+                <div class="privacy-note">
+
+                    <span>
+                        🔐
+                    </span>
+
+                    <p>
+                        Your credentials are protected
+                        using secure password hashing.
+                        CORTEX never stores your password
+                        in plain text.
+                    </p>
+
+                </div>
+
+
                 <div class="divider">
-                    <span>ALREADY HAVE AN ACCOUNT?</span>
+                    ALREADY HAVE AN ACCOUNT?
                 </div>
 
 
                 <button
-                    type="button"
                     id="show-login"
                     class="secondary-button"
                 >
                     Back to sign in
                 </button>
 
+
             </div>
+
+
+            <!-- =================================================
+                 FORGOT PASSWORD
+            ================================================== -->
+
+            <div
+                class="auth-card hidden"
+                id="forgot-section"
+            >
+
+
+                <span class="small-label">
+                    ACCOUNT RECOVERY
+                </span>
+
+
+                <h2>
+                    Reset your password
+                </h2>
+
+
+                <p class="muted">
+                    Enter your account email.
+                    We'll send secure reset instructions.
+                </p>
+
+
+                <form id="forgot-form">
+
+
+                    <label>
+
+                        Email
+
+                        <input
+                            id="forgot-email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="you@gmail.com"
+                            required
+                        >
+
+                    </label>
+
+
+                    <button
+                        class="primary-button"
+                        type="submit"
+                    >
+
+                        Send reset link
+
+                        <span>
+                            →
+                        </span>
+
+                    </button>
+
+
+                    <p
+                        id="forgot-message"
+                        class="form-message"
+                    ></p>
+
+
+                </form>
+
+
+                <div class="privacy-note">
+
+                    <span>
+                        🛡️
+                    </span>
+
+                    <p>
+                        Reset links are temporary
+                        security tokens.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="back-login-from-forgot"
+                    class="secondary-button"
+                >
+                    Back to sign in
+                </button>
+
+
+            </div>
+
 
         </section>
 
@@ -498,4 +783,5 @@
     <script src="app.js"></script>
 
 </body>
+
 </html>

@@ -3,3 +3,16 @@ venv/
 __pycache__/
 *.pyc
 postgresql-18.6-1-windows-x64.exe
+# ZIP backup files
+*.zip
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env

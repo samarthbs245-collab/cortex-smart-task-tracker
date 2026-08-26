@@ -5,7 +5,10 @@ psycopg2-binary
 python-dotenv
 python-jose[cryptography]
 werkzeug
+argon2-cffi
+slowapi
 pydantic
 pydantic[email]
 python-multipart
 google-genai
+resend

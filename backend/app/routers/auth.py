@@ -1,9 +1,24 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.user import *
 from app.models.user import User
+
+from app.schemas.user import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    ResetPasswordRequest,
+    TokenResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+
+from app.security import limiter
+
+from app.services.auth_dependency import (
+    get_current_user,
+)
 
 from app.services.auth_service import (
     authenticate_user,
@@ -13,13 +28,9 @@ from app.services.auth_service import (
     reset_password,
 )
 
-from app.services.auth_dependency import (
-    get_current_user,
-)
-
 
 # ============================================================
-# AUTH ROUTER
+# AUTHENTICATION ROUTER
 # ============================================================
 
 router = APIRouter(
@@ -37,18 +48,20 @@ router = APIRouter(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("5/minute")
 def register(
+    request: Request,
     user_data: UserCreate,
     db: Session = Depends(get_db),
 ):
     return create_user(
-        db,
-        user_data.name,
-        user_data.email,
-        user_data.password,
-        user_data.age,
-        user_data.goal,
-        user_data.available_hours,
+        db=db,
+        name=user_data.name,
+        email=user_data.email,
+        password=user_data.password,
+        age=user_data.age,
+        goal=user_data.goal,
+        available_hours=user_data.available_hours,
     )
 
 
@@ -60,14 +73,16 @@ def register(
     "/login",
     response_model=TokenResponse,
 )
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     login_data: LoginRequest,
     db: Session = Depends(get_db),
 ):
     user = authenticate_user(
-        db,
-        login_data.email,
-        login_data.password,
+        db=db,
+        email=login_data.email,
+        password=login_data.password,
     )
 
     return {
@@ -79,14 +94,14 @@ def login(
 
 
 # ============================================================
-# GET CURRENT USER
+# CURRENT USER
 # ============================================================
 
 @router.get(
     "/me",
     response_model=UserResponse,
 )
-def me(
+def get_me(
     current_user: User = Depends(
         get_current_user
     ),
@@ -113,14 +128,26 @@ def update_me(
         exclude_unset=True
     )
 
+    if "name" in update_data:
+        update_data["name"] = (
+            update_data["name"].strip()
+        )
+
+    if "goal" in update_data:
+        update_data["goal"] = (
+            update_data["goal"].strip()
+            if update_data["goal"]
+            else None
+        )
+
+    if "theme" in update_data:
+        update_data["theme"] = (
+            update_data["theme"]
+            .strip()
+            .lower()
+        )
+
     for field, value in update_data.items():
-
-        if (
-            field == "name"
-            and value
-        ):
-            value = value.strip()
-
         setattr(
             current_user,
             field,
@@ -140,13 +167,15 @@ def update_me(
 @router.post(
     "/forgot-password",
 )
+@limiter.limit("3/minute")
 def forgot_password(
+    request: Request,
     payload: ForgotPasswordRequest,
     db: Session = Depends(get_db),
 ):
     request_password_reset(
-        db,
-        payload.email,
+        db=db,
+        email=payload.email,
     )
 
     return {
@@ -164,14 +193,14 @@ def forgot_password(
 @router.post(
     "/reset-password",
 )
-def do_reset(
+def do_reset_password(
     payload: ResetPasswordRequest,
     db: Session = Depends(get_db),
 ):
     reset_password(
-        db,
-        payload.token,
-        payload.new_password,
+        db=db,
+        token=payload.token,
+        new_password=payload.new_password,
     )
 
     return {

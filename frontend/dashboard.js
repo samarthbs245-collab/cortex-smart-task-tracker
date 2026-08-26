@@ -1,10 +1,10 @@
-const API_URL = "https://cortex-rgzd.onrender.com";
+// ============================================================
+// CORTEX DASHBOARD ENGINE
+// ============================================================
+
+const API_URL = "http://127.0.0.1:8000";
 
 const token = localStorage.getItem("access_token");
-
-// ============================================================
-// AUTH CHECK
-// ============================================================
 
 if (!token) {
     window.location.href = "index.html";
@@ -12,114 +12,2017 @@ if (!token) {
 
 
 // ============================================================
-// ELEMENTS
+// GLOBAL STATE
 // ============================================================
 
-const navItems =
-    document.querySelectorAll(".nav-item");
-
-const sections = {
-    overview:
-        document.getElementById("overview-section"),
-
-    tasks:
-        document.getElementById("tasks-section"),
-
-    ai:
-        document.getElementById("ai-section"),
-
-    profile:
-        document.getElementById("profile-section")
-};
-
-
-const logoutButton =
-    document.getElementById("logout-button");
-
-const taskModal =
-    document.getElementById("task-modal");
-
-const closeModalButton =
-    document.getElementById("close-modal");
-
-const addTaskButton =
-    document.getElementById("add-task-button");
-
-const createTaskButton =
-    document.getElementById("create-task-button");
-
-const taskForm =
-    document.getElementById("task-form");
-
-
-// ============================================================
-// TASK DATA
-// ============================================================
+const $ = (id) => document.getElementById(id);
 
 let tasks = [];
+let currentUser = null;
+let currentView = "dashboard";
+let calendarDate = new Date();
+
+const PRIORITY_ORDER = {
+    urgent: 4,
+    high: 3,
+    medium: 2,
+    low: 1,
+};
+
+const STATUS_ORDER = [
+    "todo",
+    "in_progress",
+    "done",
+];
 
 
 // ============================================================
-// NAVIGATION
+// HELPERS
 // ============================================================
 
-navItems.forEach((item) => {
-
-    item.addEventListener("click", () => {
-
-        const sectionName =
-            item.dataset.section;
-
-        navItems.forEach((nav) => {
-            nav.classList.remove("active");
-        });
-
-        item.classList.add("active");
-
-        Object.values(sections).forEach(
-            (section) => {
-
-                if (section) {
-                    section.classList.add("hidden");
-                }
-
-            }
-        );
-
-        if (sections[sectionName]) {
-            sections[sectionName]
-                .classList.remove("hidden");
-        }
-
-        // Load tasks whenever My Tasks is opened
-        if (sectionName === "tasks") {
-            loadTasks();
-        }
-
-    });
-
-});
+function escapeHTML(value = "") {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 
 
-// ============================================================
-// LOGOUT
-// ============================================================
+function authHeaders(json = true) {
+    const headers = {
+        Authorization: `Bearer ${token}`,
+    };
 
-if (logoutButton) {
+    if (json) {
+        headers["Content-Type"] = "application/json";
+    }
 
-    logoutButton.addEventListener(
-        "click",
-        () => {
+    return headers;
+}
 
-            localStorage.removeItem(
-                "access_token"
-            );
 
-            window.location.href =
-                "index.html";
+async function parseResponse(response) {
+    const text = await response.text();
+
+    if (!text) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch {
+        return {
+            detail: text,
+        };
+    }
+}
+
+
+async function api(path, options = {}) {
+    const response = await fetch(
+        `${API_URL}${path}`,
+        {
+            ...options,
+            headers: {
+                ...authHeaders(
+                    options.body !== undefined
+                ),
+                ...(options.headers || {}),
+            },
         }
     );
 
+    const data = await parseResponse(response);
+
+    if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        window.location.href = "index.html";
+        throw new Error("Your session has expired.");
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.message ||
+            "Something went wrong."
+        );
+    }
+
+    return data;
+}
+
+
+function showToast(text, type = "normal") {
+    const container = $("toast-container");
+
+    if (!container) {
+        return;
+    }
+
+    const toast = document.createElement("div");
+
+    toast.className = `toast ${type}`;
+    toast.textContent = text;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3200);
+}
+
+
+function formatDate(value) {
+    if (!value) {
+        return "No deadline";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "No deadline";
+    }
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            day: "numeric",
+            month: "short",
+            hour: "numeric",
+            minute: "2-digit",
+        }
+    );
+}
+
+
+function isOverdue(task) {
+    if (
+        !task.due_date ||
+        task.status === "done"
+    ) {
+        return false;
+    }
+
+    return new Date(task.due_date) < new Date();
+}
+
+
+function isDueToday(task) {
+    if (!task.due_date) {
+        return false;
+    }
+
+    const date = new Date(task.due_date);
+    const now = new Date();
+
+    return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate()
+    );
+}
+
+
+function statusLabel(status) {
+    const labels = {
+        todo: "To do",
+        in_progress: "In progress",
+        done: "Completed",
+    };
+
+    return labels[status] || status;
+}
+
+
+function nextStatus(status) {
+    if (status === "todo") {
+        return "in_progress";
+    }
+
+    if (status === "in_progress") {
+        return "done";
+    }
+
+    return "todo";
+}
+
+
+function priorityBadge(priority) {
+    const value = priority || "medium";
+
+    return `
+        <span class="task-badge ${escapeHTML(value)}">
+            ${escapeHTML(value.toUpperCase())}
+        </span>
+    `;
+}
+
+
+// ============================================================
+// PROFILE
+// ============================================================
+
+async function loadProfile() {
+    currentUser = await api("/api/auth/me");
+
+    const firstName =
+        currentUser.name
+            .trim()
+            .split(/\s+/)[0];
+
+    $("page-title").textContent =
+        `Good ${getGreeting()}, ${firstName}`;
+
+    $("sidebar-name").textContent =
+        currentUser.name;
+
+    $("sidebar-email").textContent =
+        currentUser.email;
+
+    const initial =
+        currentUser.name
+            .charAt(0)
+            .toUpperCase();
+
+    $("sidebar-avatar").textContent = initial;
+    $("top-avatar").textContent = initial;
+
+    applyTheme(
+        currentUser.theme ||
+        localStorage.getItem("cortex_theme") ||
+        "dark"
+    );
+}
+
+
+function getGreeting() {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+        return "morning";
+    }
+
+    if (hour < 18) {
+        return "afternoon";
+    }
+
+    return "evening";
+}
+
+
+// ============================================================
+// THEME
+// ============================================================
+
+function applyTheme(theme) {
+    const isLight = theme === "light";
+
+    document.body.classList.toggle(
+        "light-theme",
+        isLight
+    );
+
+    localStorage.setItem(
+        "cortex_theme",
+        theme
+    );
+
+    const label = $("theme-label");
+    const icon = $("theme-icon");
+
+    if (label) {
+        label.textContent =
+            isLight
+                ? "Dark mode"
+                : "Light mode";
+    }
+
+    if (icon) {
+        icon.textContent =
+            isLight
+                ? "☾"
+                : "☼";
+    }
+}
+
+
+async function toggleTheme() {
+    const light =
+        document.body.classList.contains(
+            "light-theme"
+        );
+
+    const next =
+        light
+            ? "dark"
+            : "light";
+
+    applyTheme(next);
+
+    try {
+        await api(
+            "/api/auth/me",
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    theme: next,
+                }),
+            }
+        );
+    } catch (error) {
+        console.warn(
+            "Theme preference could not be saved:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// LOAD TASKS
+// ============================================================
+
+async function loadTasks() {
+    const search =
+        $("task-search")?.value.trim() || "";
+
+    const status =
+        $("status-filter")?.value || "all";
+
+    const priority =
+        $("priority-filter")?.value || "all";
+
+    const due =
+        $("due-filter")?.value || "all";
+
+    const sort =
+        $("sort-filter")?.value || "newest";
+
+    const query = new URLSearchParams();
+
+    if (search) {
+        query.set("search", search);
+    }
+
+    if (status !== "all") {
+        query.set("status", status);
+    }
+
+    if (priority !== "all") {
+        query.set("priority", priority);
+    }
+
+    if (due !== "all") {
+        query.set("due", due);
+    }
+
+    query.set("sort", sort);
+
+    tasks = await api(
+        `/api/tasks?${query.toString()}`
+    );
+
+    renderTaskList();
+    renderFocusTasks();
+    renderRecentTasks();
+    renderBoard();
+    renderCalendar();
+
+    await loadStats();
+    await loadReminders();
+}
+
+
+// ============================================================
+// STATISTICS
+// ============================================================
+
+async function loadStats() {
+    const stats =
+        await api("/api/tasks/stats");
+
+    $("stat-total").textContent =
+        stats.total;
+
+    $("stat-completed").textContent =
+        stats.completed;
+
+    $("stat-progress").textContent =
+        stats.in_progress;
+
+    $("stat-overdue").textContent =
+        stats.overdue;
+
+    $("stat-urgent").textContent =
+        stats.urgent;
+
+    $("stat-completion-rate").textContent =
+        `${stats.completion_rate}% completion rate`;
+}
+
+
+// ============================================================
+// TASK CARD
+// ============================================================
+
+function taskCard(task) {
+    const overdue = isOverdue(task);
+    const dueToday = isDueToday(task);
+
+    const dueText =
+        overdue
+            ? "Overdue"
+            : dueToday
+                ? "Due today"
+                : task.due_date
+                    ? `Due ${formatDate(task.due_date)}`
+                    : "No deadline";
+
+    const subtaskCount =
+        Array.isArray(task.subtasks)
+            ? task.subtasks.length
+            : 0;
+
+    const completedSubtasks =
+        Array.isArray(task.subtasks)
+            ? task.subtasks.filter(
+                item => item.completed
+            ).length
+            : 0;
+
+    const completeButton =
+        task.status !== "done"
+            ? `
+                <button
+                    class="mini-action complete-action"
+                    data-task-action="complete"
+                    data-task-id="${task.id}"
+                >
+                    ✓ Complete
+                </button>
+            `
+            : `
+                <span class="task-completed-label">
+                    ✓ Completed
+                </span>
+            `;
+
+    return `
+        <article
+            class="task-card"
+            data-task-id="${task.id}"
+        >
+
+            <div class="task-card-top">
+
+                <div>
+
+                    <div class="task-card-title">
+                        ${escapeHTML(task.title)}
+                    </div>
+
+                    <div class="task-card-description">
+                        ${escapeHTML(
+                            task.description ||
+                            "No description"
+                        )}
+                    </div>
+
+                </div>
+
+                ${priorityBadge(task.priority)}
+
+            </div>
+
+
+            <div class="task-meta">
+
+                <span class="meta-pill">
+                    ${escapeHTML(
+                        statusLabel(task.status)
+                    )}
+                </span>
+
+                <span class="meta-pill ${
+                    overdue ? "overdue-pill" : ""
+                }">
+                    ${escapeHTML(dueText)}
+                </span>
+
+                ${
+                    subtaskCount
+                        ? `
+                            <span class="meta-pill">
+                                ✓ ${completedSubtasks}/${subtaskCount}
+                            </span>
+                        `
+                        : ""
+                }
+
+            </div>
+
+
+            ${
+                task.ai_reason
+                    ? `
+                        <div class="task-ai-note">
+                            ✦ ${escapeHTML(
+                                task.ai_reason
+                            )}
+                        </div>
+                    `
+                    : ""
+            }
+
+
+            <div class="task-card-actions">
+
+                <div class="task-status-actions">
+
+                    <button
+                        class="mini-action status-action ${
+                            task.status === "todo"
+                                ? "active-status"
+                                : ""
+                        }"
+                        data-task-action="set-status"
+                        data-status="todo"
+                        data-task-id="${task.id}"
+                    >
+                        To do
+                    </button>
+
+                    <button
+                        class="mini-action status-action ${
+                            task.status === "in_progress"
+                                ? "active-status"
+                                : ""
+                        }"
+                        data-task-action="set-status"
+                        data-status="in_progress"
+                        data-task-id="${task.id}"
+                    >
+                        In progress
+                    </button>
+
+                    <button
+                        class="mini-action status-action ${
+                            task.status === "done"
+                                ? "active-status"
+                                : ""
+                        }"
+                        data-task-action="set-status"
+                        data-status="done"
+                        data-task-id="${task.id}"
+                    >
+                        Completed
+                    </button>
+
+                </div>
+
+                <button
+                    class="mini-action"
+                    data-task-action="ai"
+                    data-task-id="${task.id}"
+                >
+                    ✦ AI
+                </button>
+
+                <button
+                    class="mini-action danger-action"
+                    data-task-action="delete"
+                    data-task-id="${task.id}"
+                >
+                    Delete
+                </button>
+
+            </div>
+
+        </article>
+    `;
+}
+
+
+// ============================================================
+// TASK LIST
+// ============================================================
+
+function renderTaskList() {
+    const root = $("task-list");
+
+    if (!root) {
+        return;
+    }
+
+    if (!tasks.length) {
+        root.innerHTML = `
+            <div class="empty-state">
+                <div>✓</div>
+                <strong>No tasks found</strong>
+                <span>
+                    Create a task or change your filters.
+                </span>
+            </div>
+        `;
+
+        return;
+    }
+
+    root.innerHTML =
+        tasks.map(taskCard).join("");
+
+    attachTaskActions();
+}
+
+
+// ============================================================
+// TODAY'S FOCUS
+// ============================================================
+
+function renderFocusTasks() {
+    const root = $("focus-task-list");
+
+    if (!root) {
+        return;
+    }
+
+    const focus =
+        [...tasks]
+            .filter(
+                task =>
+                    task.status !== "done"
+            )
+            .sort(
+                (a, b) => {
+
+                    const p =
+                        PRIORITY_ORDER[b.priority] -
+                        PRIORITY_ORDER[a.priority];
+
+                    if (p !== 0) {
+                        return p;
+                    }
+
+                    return (
+                        new Date(
+                            a.due_date ||
+                            "2999-12-31"
+                        ) -
+                        new Date(
+                            b.due_date ||
+                            "2999-12-31"
+                        )
+                    );
+                }
+            )
+            .slice(0, 5);
+
+    if (!focus.length) {
+        root.innerHTML = `
+            <div class="empty-state">
+                <div>✦</div>
+                <strong>Your workspace is clear.</strong>
+                <span>
+                    Create something new and let CORTEX
+                    help you prioritize it.
+                </span>
+            </div>
+        `;
+
+        return;
+    }
+
+    root.innerHTML =
+        focus
+            .map(task => {
+                return `
+                    <div class="focus-task-item">
+
+                        <button
+                            class="task-check"
+                            data-task-action="complete"
+                            data-task-id="${task.id}"
+                            title="Mark completed"
+                        >
+                            ✓
+                        </button>
+
+                        <div class="task-item-copy">
+
+                            <strong>
+                                ${escapeHTML(task.title)}
+                            </strong>
+
+                            <span>
+                                ${escapeHTML(
+                                    statusLabel(task.status)
+                                )}
+                                ·
+                                ${
+                                    task.due_date
+                                        ? escapeHTML(
+                                            formatDate(
+                                                task.due_date
+                                            )
+                                        )
+                                        : "No deadline"
+                                }
+                            </span>
+
+                        </div>
+
+                        ${priorityBadge(task.priority)}
+
+                    </div>
+                `;
+            })
+            .join("");
+
+    attachTaskActions();
+}
+
+
+// ============================================================
+// RECENT TASKS
+// ============================================================
+
+function renderRecentTasks() {
+    const root = $("recent-task-list");
+
+    if (!root) {
+        return;
+    }
+
+    const recent =
+        [...tasks]
+            .sort(
+                (a, b) =>
+                    new Date(b.created_at) -
+                    new Date(a.created_at)
+            )
+            .slice(0, 6);
+
+    if (!recent.length) {
+        root.innerHTML = `
+            <div class="empty-state">
+                <div>✓</div>
+                <span>
+                    Your task activity will appear here.
+                </span>
+            </div>
+        `;
+
+        return;
+    }
+
+    root.innerHTML =
+        recent
+            .map(task => {
+                return `
+                    <div class="recent-task-item">
+
+                        <div class="task-item-copy">
+
+                            <strong>
+                                ${escapeHTML(task.title)}
+                            </strong>
+
+                            <span>
+                                ${escapeHTML(
+                                    statusLabel(task.status)
+                                )}
+                                ·
+                                ${
+                                    task.due_date
+                                        ? escapeHTML(
+                                            formatDate(
+                                                task.due_date
+                                            )
+                                        )
+                                        : "No deadline"
+                                }
+                            </span>
+
+                        </div>
+
+                        ${priorityBadge(task.priority)}
+
+                    </div>
+                `;
+            })
+            .join("");
+}
+
+
+// ============================================================
+// BOARD
+// ============================================================
+
+function renderBoard() {
+    const columns = {
+        todo: $("board-todo"),
+        in_progress: $("board-progress"),
+        done: $("board-done"),
+    };
+
+    if (
+        !columns.todo ||
+        !columns.in_progress ||
+        !columns.done
+    ) {
+        return;
+    }
+
+    Object.values(columns).forEach(
+        column => {
+            column.innerHTML = "";
+        }
+    );
+
+    STATUS_ORDER.forEach(status => {
+        const column = columns[status];
+
+        const matching =
+            tasks.filter(
+                task =>
+                    task.status === status
+            );
+
+        matching.forEach(task => {
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "board-task-card";
+
+            card.draggable = true;
+
+            card.dataset.taskId =
+                task.id;
+
+            card.innerHTML = `
+                <div class="task-card-title">
+                    ${escapeHTML(task.title)}
+                </div>
+
+                <div class="task-meta">
+                    ${priorityBadge(task.priority)}
+                </div>
+
+                <div class="task-card-description">
+                    ${
+                        task.due_date
+                            ? escapeHTML(
+                                formatDate(task.due_date)
+                            )
+                            : "No deadline"
+                    }
+                </div>
+
+                ${
+                    task.status !== "done"
+                        ? `
+                            <button
+                                class="mini-action complete-board-action"
+                                data-task-id="${task.id}"
+                            >
+                                ✓ Complete
+                            </button>
+                        `
+                        : `
+                            <div class="task-completed-label">
+                                ✓ Completed
+                            </div>
+                        `
+                }
+            `;
+
+            card.addEventListener(
+                "dragstart",
+                event => {
+                    event.dataTransfer.setData(
+                        "text/plain",
+                        String(task.id)
+                    );
+                }
+            );
+
+            const completeButton =
+                card.querySelector(
+                    ".complete-board-action"
+                );
+
+            completeButton?.addEventListener(
+                "click",
+                async event => {
+                    event.stopPropagation();
+
+                    await completeTask(
+                        task.id
+                    );
+                }
+            );
+
+            column.appendChild(card);
+        });
+    });
+
+    $("board-todo-count").textContent =
+        tasks.filter(
+            task =>
+                task.status === "todo"
+        ).length;
+
+    $("board-progress-count").textContent =
+        tasks.filter(
+            task =>
+                task.status === "in_progress"
+        ).length;
+
+    $("board-done-count").textContent =
+        tasks.filter(
+            task =>
+                task.status === "done"
+        ).length;
+
+    setupBoardDrop(
+        columns.todo,
+        "todo"
+    );
+
+    setupBoardDrop(
+        columns.in_progress,
+        "in_progress"
+    );
+
+    setupBoardDrop(
+        columns.done,
+        "done"
+    );
+}
+
+
+function setupBoardDrop(
+    column,
+    targetStatus
+) {
+    if (!column) {
+        return;
+    }
+
+    column.ondragover = event => {
+        event.preventDefault();
+
+        column.style.borderColor =
+            "rgba(139,92,246,.45)";
+    };
+
+    column.ondragleave = () => {
+        column.style.borderColor = "";
+    };
+
+    column.ondrop = async event => {
+        event.preventDefault();
+
+        column.style.borderColor = "";
+
+        const taskId =
+            event.dataTransfer.getData(
+                "text/plain"
+            );
+
+        if (!taskId) {
+            return;
+        }
+
+        try {
+            await api(
+                `/api/tasks/${taskId}`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        status: targetStatus,
+                    }),
+                }
+            );
+
+            showToast(
+                targetStatus === "done"
+                    ? "Task completed ✓"
+                    : "Task moved successfully.",
+                "success"
+            );
+
+            await loadTasks();
+
+        } catch (error) {
+            showToast(
+                error.message,
+                "error"
+            );
+        }
+    };
+}
+
+
+// ============================================================
+// CALENDAR
+// ============================================================
+
+function renderCalendar() {
+    const root = $("calendar-grid");
+    const monthLabel = $("calendar-month");
+
+    if (!root || !monthLabel) {
+        return;
+    }
+
+    const year =
+        calendarDate.getFullYear();
+
+    const month =
+        calendarDate.getMonth();
+
+    monthLabel.textContent =
+        calendarDate.toLocaleDateString(
+            "en-IN",
+            {
+                month: "long",
+                year: "numeric",
+            }
+        );
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        ).getDay();
+
+    const lastDate =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+    let html = "";
+
+    for (
+        let i = 0;
+        i < firstDay;
+        i++
+    ) {
+        html += `
+            <div class="calendar-day"></div>
+        `;
+    }
+
+    for (
+        let day = 1;
+        day <= lastDate;
+        day++
+    ) {
+        const dayTasks =
+            tasks.filter(task => {
+                if (!task.due_date) {
+                    return false;
+                }
+
+                const date =
+                    new Date(task.due_date);
+
+                return (
+                    date.getFullYear() === year &&
+                    date.getMonth() === month &&
+                    date.getDate() === day
+                );
+            });
+
+        html += `
+            <div class="calendar-day">
+
+                <div class="calendar-day-date">
+                    ${day}
+                </div>
+
+                ${
+                    dayTasks.length
+                        ? dayTasks
+                            .map(
+                                task => `
+                                    <div class="calendar-day-task">
+                                        ${escapeHTML(
+                                            task.title
+                                        )}
+                                    </div>
+                                `
+                            )
+                            .join("")
+                        : `
+                            <div
+                                style="
+                                    margin-top:16px;
+                                    color:#607089;
+                                    font-size:9px;
+                                "
+                            >
+                                No tasks
+                            </div>
+                        `
+                }
+
+            </div>
+        `;
+    }
+
+    root.innerHTML = html;
+}
+
+
+// ============================================================
+// REMINDERS
+// ============================================================
+
+async function loadReminders() {
+    const root = $("reminder-list");
+
+    if (!root) {
+        return;
+    }
+
+    try {
+        const reminders =
+            await api(
+                "/api/tasks/reminders"
+            );
+
+        if (!reminders.length) {
+            root.innerHTML = `
+                <div class="empty-state compact">
+                    <div>◷</div>
+                    <span>
+                        No urgent deadlines right now.
+                    </span>
+                </div>
+            `;
+
+            $("notification-count")
+                ?.classList.add("hidden");
+
+            renderNotifications([]);
+
+            return;
+        }
+
+        root.innerHTML =
+            reminders
+                .slice(0, 5)
+                .map(
+                    item => `
+                        <div class="reminder-item ${
+                            item.type === "overdue"
+                                ? "overdue"
+                                : ""
+                        }">
+
+                            <div class="reminder-icon">
+                                ${
+                                    item.type === "overdue"
+                                        ? "!"
+                                        : "◷"
+                                }
+                            </div>
+
+                            <div class="reminder-copy">
+
+                                <strong>
+                                    ${escapeHTML(item.title)}
+                                </strong>
+
+                                <span>
+                                    ${
+                                        item.type === "overdue"
+                                            ? "Overdue"
+                                            : "Due soon"
+                                    }
+                                    ·
+                                    ${escapeHTML(
+                                        formatDate(
+                                            item.due_date
+                                        )
+                                    )}
+                                </span>
+
+                            </div>
+
+                        </div>
+                    `
+                )
+                .join("");
+
+        $("notification-count").textContent =
+            reminders.length;
+
+        $("notification-count")
+            ?.classList.remove("hidden");
+
+        renderNotifications(reminders);
+
+    } catch (error) {
+        console.warn(
+            "Reminder loading failed:",
+            error
+        );
+    }
+}
+
+
+function renderNotifications(reminders) {
+    const root = $("notification-list");
+
+    if (!root) {
+        return;
+    }
+
+    root.innerHTML =
+        reminders.length
+            ? reminders
+                .map(
+                    item => `
+                        <div class="notification-item">
+
+                            <strong>
+                                ${
+                                    item.type === "overdue"
+                                        ? "⚠ Task overdue"
+                                        : "◷ Deadline approaching"
+                                }
+                            </strong>
+
+                            <span>
+                                ${escapeHTML(item.title)}
+                                ·
+                                ${escapeHTML(
+                                    formatDate(
+                                        item.due_date
+                                    )
+                                )}
+                            </span>
+
+                        </div>
+                    `
+                )
+                .join("")
+            : `
+                <div class="empty-state compact">
+                    <span>
+                        Nothing needs your attention.
+                    </span>
+                </div>
+            `;
+}
+
+
+// ============================================================
+// CREATE TASK
+// ============================================================
+
+async function createTask(event) {
+    event.preventDefault();
+
+    const title =
+        $("task-title-input")
+            .value
+            .trim();
+
+    const description =
+        $("task-description-input")
+            .value
+            .trim();
+
+    const priority =
+        $("task-priority-input")
+            .value;
+
+    const status =
+        $("task-status-input")
+            .value;
+
+    const dueValue =
+        $("task-due-input")
+            .value;
+
+    const message =
+        $("task-form-message");
+
+    if (!title) {
+        message.textContent =
+            "Task title is required.";
+
+        message.className =
+            "form-message error";
+
+        return;
+    }
+
+    try {
+        const subtasks =
+            getGeneratedSubtasks();
+
+        await api(
+            "/api/tasks",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    title,
+                    description:
+                        description || null,
+                    priority,
+                    status,
+                    due_date:
+                        dueValue
+                            ? new Date(
+                                dueValue
+                            ).toISOString()
+                            : null,
+                    subtasks:
+                        subtasks.map(
+                            item => ({
+                                title: item,
+                            })
+                        ),
+                }),
+            }
+        );
+
+        closeTaskModal();
+
+        showToast(
+            "Task created successfully.",
+            "success"
+        );
+
+        await loadTasks();
+
+    } catch (error) {
+        message.textContent =
+            error.message;
+
+        message.className =
+            "form-message error";
+    }
+}
+
+
+function closeTaskModal() {
+    $("task-modal")
+        ?.classList.add("hidden");
+
+    $("task-form")
+        ?.reset();
+
+    $("generated-subtasks")
+        .innerHTML = "";
+
+    $("task-ai-suggestion")
+        .textContent =
+        "Let CORTEX analyze this task.";
+
+    $("task-form-message")
+        .textContent = "";
+}
+
+
+// ============================================================
+// COMPLETE TASK ✅
+// ============================================================
+
+async function completeTask(id) {
+    try {
+
+        await api(
+            `/api/tasks/${id}/complete`,
+            {
+                method: "POST",
+            }
+        );
+
+        showToast(
+            "Task completed successfully ✓",
+            "success"
+        );
+
+        await loadTasks();
+
+    } catch (error) {
+
+        showToast(
+            error.message ||
+            "Unable to complete task.",
+            "error"
+        );
+    }
+}
+
+
+// ============================================================
+// SET TASK STATUS
+// ============================================================
+
+async function setTaskStatus(id, status) {
+
+    const validStatuses = [
+        "todo",
+        "in_progress",
+        "done",
+    ];
+
+    if (!validStatuses.includes(status)) {
+        showToast(
+            "Invalid task status.",
+            "error"
+        );
+        return;
+    }
+
+    const task =
+        tasks.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+    if (!task) {
+        return;
+    }
+
+    if (task.status === status) {
+        return;
+    }
+
+    try {
+
+        if (status === "done") {
+
+            await api(
+                `/api/tasks/${id}/complete`,
+                {
+                    method: "POST",
+                }
+            );
+
+            showToast(
+                "Task completed successfully ✓",
+                "success"
+            );
+
+        } else {
+
+            await api(
+                `/api/tasks/${id}`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        status: status,
+                    }),
+                }
+            );
+
+            showToast(
+                `Task moved to ${statusLabel(status)}.`,
+                "success"
+            );
+        }
+
+        await loadTasks();
+
+    } catch (error) {
+
+        showToast(
+            error.message ||
+            "Unable to update task status.",
+            "error"
+        );
+    }
+}
+
+
+// ============================================================
+
+// DELETE TASK
+// ============================================================
+
+async function deleteTask(id) {
+    const confirmDelete =
+        window.confirm(
+            "Delete this task permanently?"
+        );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+    await api(
+        `/api/tasks/${id}`,
+        {
+            method: "DELETE",
+        }
+    );
+
+    showToast(
+        "Task deleted.",
+        "success"
+    );
+
+    await loadTasks();
+}
+
+
+// ============================================================
+// TASK ACTIONS
+// ============================================================
+
+function attachTaskActions() {
+
+    document
+        .querySelectorAll(
+            "[data-task-action]"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                async event => {
+
+                    event.stopPropagation();
+
+                    const id =
+                        button.dataset.taskId;
+
+                    const action =
+                        button.dataset.taskAction;
+
+                    try {
+
+                        if (
+                            action === "complete"
+                        ) {
+
+                            await completeTask(id);
+
+                        } else if (
+                            action === "set-status"
+                        ) {
+
+                            await setTaskStatus(
+                                id,
+                                button.dataset.status
+                            );
+
+                        } else if (
+                            action === "delete"
+                        ) {
+
+                            await deleteTask(id);
+
+                        } else if (
+                            action === "ai"
+                        ) {
+
+                            await openTaskAI(id);
+                        }
+
+                    } catch (error) {
+
+                        showToast(
+                            error.message,
+                            "error"
+                        );
+                    }
+                }
+            );
+        });
+}
+
+
+// ============================================================
+// AI TASK ANALYSIS
+// ============================================================
+
+async function analyzeCurrentTask() {
+
+    const title =
+        $("task-title-input")
+            .value
+            .trim();
+
+    const description =
+        $("task-description-input")
+            .value
+            .trim();
+
+    if (!title) {
+        $("task-ai-suggestion")
+            .textContent =
+            "Enter a task title first.";
+
+        return;
+    }
+
+    const button =
+        $("analyze-task-button");
+
+    button.disabled = true;
+    button.textContent = "Thinking...";
+
+    try {
+
+        const result =
+            await api(
+                "/api/ai/analyze-task",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        title,
+                        description:
+                            description ||
+                            null,
+                    }),
+                }
+            );
+
+        if (
+            result.priority &&
+            $("task-priority-input")
+        ) {
+            $("task-priority-input")
+                .value =
+                result.priority;
+        }
+
+        $("task-ai-suggestion")
+            .textContent =
+            result.reason ||
+            "CORTEX analyzed your task.";
+
+        renderGeneratedSubtasks(
+            result.subtasks || []
+        );
+
+    } catch (error) {
+
+        $("task-ai-suggestion")
+            .textContent =
+            error.message;
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Analyze";
+    }
+}
+
+
+function renderGeneratedSubtasks(
+    subtasks
+) {
+
+    const root =
+        $("generated-subtasks");
+
+    if (!root) {
+        return;
+    }
+
+    if (
+        !Array.isArray(subtasks) ||
+        !subtasks.length
+    ) {
+        root.innerHTML = "";
+        return;
+    }
+
+    root.innerHTML = `
+        <div
+            style="
+                margin-bottom:8px;
+                color:#a99bf6;
+                font-size:10px;
+                font-weight:700;
+            "
+        >
+            ✦ Suggested subtasks
+        </div>
+
+        ${
+            subtasks
+                .map(
+                    item => `
+                        <div
+                            class="generated-subtask-row"
+                            data-subtask="${escapeHTML(item)}"
+                        >
+                            <span>✓</span>
+                            ${escapeHTML(item)}
+                        </div>
+                    `
+                )
+                .join("")
+        }
+    `;
+}
+
+
+function getGeneratedSubtasks() {
+    return [
+        ...document.querySelectorAll(
+            "[data-subtask]"
+        ),
+    ].map(
+        element =>
+            element.dataset.subtask
+    );
+}
+
+
+// ============================================================
+// TASK AI
+// ============================================================
+
+async function openTaskAI(id) {
+
+    const task =
+        tasks.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+    if (!task) {
+        return;
+    }
+
+    try {
+
+        const result =
+            await api(
+                "/api/ai/analyze-task",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        title: task.title,
+                        description:
+                            task.description ||
+                            null,
+                    }),
+                }
+            );
+
+        let text =
+            `CORTEX suggestion: ${
+                (
+                    result.priority ||
+                    task.priority ||
+                    "medium"
+                ).toUpperCase()
+            }`;
+
+        if (result.reason) {
+            text +=
+                `\n\n${result.reason}`;
+        }
+
+        if (
+            Array.isArray(
+                result.subtasks
+            ) &&
+            result.subtasks.length
+        ) {
+
+            text +=
+                "\n\nSuggested subtasks:\n";
+
+            text +=
+                result.subtasks
+                    .map(
+                        item =>
+                            `• ${item}`
+                    )
+                    .join("\n");
+        }
+
+        showToast(
+            text,
+            "normal"
+        );
+
+    } catch (error) {
+
+        showToast(
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+// ============================================================
+// AI CHAT
+// ============================================================
+
+function appendAIMessage(
+    text,
+    type = "assistant"
+) {
+
+    const root =
+        $("ai-messages");
+
+    if (!root) {
+        return null;
+    }
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        `ai-message ${
+            type === "user"
+                ? "user"
+                : "assistant"
+        }`;
+
+    wrapper.innerHTML = `
+        <div class="message-avatar">
+            ${
+                type === "user"
+                    ? "●"
+                    : "✦"
+            }
+        </div>
+
+        <div class="message-bubble">
+            <p>${escapeHTML(text)}</p>
+        </div>
+    `;
+
+    root.appendChild(wrapper);
+
+    root.scrollTop =
+        root.scrollHeight;
+
+    return wrapper.querySelector(
+        ".message-bubble p"
+    );
+}
+
+
+async function sendAIMessage(message) {
+
+    const clean =
+        message.trim();
+
+    if (!clean) {
+        return;
+    }
+
+    appendAIMessage(
+        clean,
+        "user"
+    );
+
+    const responseTarget =
+        appendAIMessage(
+            "CORTEX is thinking...",
+            "assistant"
+        );
+
+    try {
+
+        const result =
+            await api(
+                "/api/ai/assistant",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        message: clean,
+                    }),
+                }
+            );
+
+        responseTarget.textContent =
+            result.answer ||
+            "I don't have a useful answer yet.";
+
+    } catch (error) {
+
+        responseTarget.textContent =
+            error.message;
+    }
+}
+
+
+function runQuickAI(action) {
+
+    const prompts = {
+
+        plan:
+            "Plan my day using my current tasks. Give me the top 3 actions and explain why they should be done in that order.",
+
+        prioritize:
+            "Prioritize my current tasks. Tell me which task deserves attention first and why.",
+
+        overdue:
+            "Which of my current tasks are overdue or at risk? Give me practical next actions.",
+
+        workload:
+            "Analyze my current workload and tell me whether it looks manageable. Suggest a realistic plan.",
+    };
+
+    sendAIMessage(
+        prompts[action] || action
+    );
+}
+
+
+// ============================================================
+// VIEW SWITCHING
+// ============================================================
+
+function switchView(view) {
+
+    currentView = view;
+
+    const views = [
+        "dashboard",
+        "tasks",
+        "board",
+        "calendar",
+        "ai",
+        "profile",
+    ];
+
+    views.forEach(name => {
+
+        const section =
+            $(`${name}-view`);
+
+        if (!section) {
+            return;
+        }
+
+        section.classList.toggle(
+            "active-view",
+            name === view
+        );
+    });
+
+    document
+        .querySelectorAll(
+            ".nav-item[data-view]"
+        )
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.view === view
+            );
+        });
+
+    if (view === "board") {
+        renderBoard();
+    }
+
+    if (view === "calendar") {
+        renderCalendar();
+    }
+}
+
+
+// ============================================================
+// MOBILE SIDEBAR
+// ============================================================
+
+function toggleMobileSidebar(open) {
+
+    const sidebar =
+        $("sidebar");
+
+    const overlay =
+        $("sidebar-overlay");
+
+    sidebar?.classList.toggle(
+        "mobile-open",
+        open
+    );
+
+    overlay?.classList.toggle(
+        "mobile-open",
+        open
+    );
 }
 
 
@@ -129,992 +2032,471 @@ if (logoutButton) {
 
 function openTaskModal() {
 
-    if (!taskModal) {
-        return;
-    }
-
-    taskModal.classList.remove("hidden");
-
-}
-
-
-function closeTaskModal() {
-
-    if (!taskModal) {
-        return;
-    }
-
-    taskModal.classList.add("hidden");
-
-}
-
-
-if (addTaskButton) {
-
-    addTaskButton.addEventListener(
-        "click",
-        openTaskModal
-    );
-
-}
-
-
-if (createTaskButton) {
-
-    createTaskButton.addEventListener(
-        "click",
-        openTaskModal
-    );
-
-}
-
-
-if (closeModalButton) {
-
-    closeModalButton.addEventListener(
-        "click",
-        closeTaskModal
-    );
-
-}
-
-
-if (taskModal) {
-
-    taskModal.addEventListener(
-        "click",
-        (event) => {
-
-            if (event.target === taskModal) {
-                closeTaskModal();
-            }
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// API HEADERS
-// ============================================================
-
-function getHeaders() {
-
-    return {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
-
-}
-
-
-// ============================================================
-// LOAD TASKS
-// ============================================================
-
-async function loadTasks() {
-
-    try {
-
-        console.log("Loading CORTEX tasks...");
-
-        const response = await fetch(
-            `${API_URL}/api/tasks`,
-            {
-                method: "GET",
-                headers: getHeaders()
-            }
+    $("task-modal")
+        ?.classList.remove(
+            "hidden"
         );
 
+    setTimeout(
+        () => {
+            $("task-title-input")
+                ?.focus();
+        },
+        50
+    );
+}
 
-        if (!response.ok) {
 
-            const errorText =
-                await response.text();
+// ============================================================
+// INITIAL EVENTS
+// ============================================================
 
-            console.error(
-                "Task loading failed:",
-                errorText
-            );
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-            return;
+        // ----------------------------------------------------
+        // CORTEX DATE + TIME PICKER
+        // ----------------------------------------------------
+
+        const dueInput = document.getElementById(
+            "task-due-input"
+        );
+
+        if (dueInput && typeof flatpickr !== "undefined") {
+            flatpickr(dueInput, {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                altInput: true,
+                altFormat: "d M Y • h:i K",
+                time_24hr: false,
+                minuteIncrement: 5,
+                allowInput: false
+            });
         }
 
+        // ----------------------------------------------------
+        // NAVIGATION
+        // ----------------------------------------------------
 
-        tasks = await response.json();
+        document
+            .querySelectorAll(
+                ".nav-item[data-view]"
+            )
+            .forEach(button => {
 
-        console.log(
-            "Tasks loaded:",
-            tasks
-        );
+                button.addEventListener(
+                    "click",
+                    () => {
 
+                        switchView(
+                            button.dataset.view
+                        );
 
-        renderTasks();
-
-        updateTaskStatistics();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "CORTEX task loading error:",
-            error
-        );
-
-    }
-
-}
+                        toggleMobileSidebar(
+                            false
+                        );
+                    }
+                );
+            });
 
 
-// ============================================================
-// CREATE TASK
-// ============================================================
+        // ----------------------------------------------------
+        // THEME
+        // ----------------------------------------------------
 
-async function createTask(event) {
-
-    event.preventDefault();
-
-    try {
-
-        // --------------------------------------------
-        // Find form fields
-        // --------------------------------------------
-
-        const titleInput =
-            taskForm.querySelector(
-                '[name="title"], #task-title, #title'
-            );
-
-        const descriptionInput =
-            taskForm.querySelector(
-                '[name="description"], #task-description, #description'
-            );
-
-        const priorityInput =
-            taskForm.querySelector(
-                '[name="priority"], #task-priority, #priority'
-            );
-
-        const dueDateInput =
-            taskForm.querySelector(
-                '[name="due_date"], [name="dueDate"], #task-due-date, #due-date'
+        $("toggle-theme")
+            ?.addEventListener(
+                "click",
+                toggleTheme
             );
 
 
-        // --------------------------------------------
-        // Get values
-        // --------------------------------------------
+        // ----------------------------------------------------
+        // LOGOUT
+        // ----------------------------------------------------
 
-        const title =
-            titleInput
-                ? titleInput.value.trim()
-                : "";
+        $("logout-button")
+            ?.addEventListener(
+                "click",
+                () => {
 
-        const description =
-            descriptionInput
-                ? descriptionInput.value.trim()
-                : "";
+                    localStorage.removeItem(
+                        "access_token"
+                    );
 
-        const priority =
-            priorityInput
-                ? priorityInput.value
-                : "medium";
-
-        const dueDate =
-            dueDateInput
-                ? dueDateInput.value
-                : "";
-
-
-        // --------------------------------------------
-        // Validate title
-        // --------------------------------------------
-
-        if (!title) {
-
-            alert(
-                "Please enter a task title."
+                    window.location.href =
+                        "index.html";
+                }
             );
 
-            return;
-        }
 
+        // ----------------------------------------------------
+        // MOBILE MENU
+        // ----------------------------------------------------
 
-        // --------------------------------------------
-        // Prepare request
-        // --------------------------------------------
-
-        const taskData = {
-
-            title: title,
-
-            description:
-                description || null,
-
-            priority:
-                priority || "medium",
-
-            due_date:
-                dueDate
-                    ? new Date(dueDate).toISOString()
-                    : null
-
-        };
-
-
-        console.log(
-            "Creating task:",
-            taskData
-        );
-
-
-        // --------------------------------------------
-        // Send to FastAPI
-        // --------------------------------------------
-
-        const response = await fetch(
-            `${API_URL}/api/tasks`,
-            {
-                method: "POST",
-
-                headers:
-                    getHeaders(),
-
-                body:
-                    JSON.stringify(taskData)
-            }
-        );
-
-
-        // --------------------------------------------
-        // Handle error
-        // --------------------------------------------
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Task creation failed:",
-                errorText
+        $("mobile-menu")
+            ?.addEventListener(
+                "click",
+                () =>
+                    toggleMobileSidebar(true)
             );
 
-            alert(
-                "Unable to create task.\n\n" +
-                errorText
+        $("sidebar-overlay")
+            ?.addEventListener(
+                "click",
+                () =>
+                    toggleMobileSidebar(false)
             );
 
-            return;
-        }
 
+        // ----------------------------------------------------
+        // NEW TASK
+        // ----------------------------------------------------
+
+        $("quick-add-task")
+            ?.addEventListener(
+                "click",
+                openTaskModal
+            );
+
+        $("hero-new-task")
+            ?.addEventListener(
+                "click",
+                openTaskModal
+            );
+
+        $("tasks-new-button")
+            ?.addEventListener(
+                "click",
+                openTaskModal
+            );
+
+        $("board-new-button")
+            ?.addEventListener(
+                "click",
+                openTaskModal
+            );
+
+
+        // ----------------------------------------------------
+        // CLOSE MODAL
+        // ----------------------------------------------------
+
+        document
+            .querySelectorAll(
+                "[data-close-modal]"
+            )
+            .forEach(element => {
+
+                element.addEventListener(
+                    "click",
+                    closeTaskModal
+                );
+            });
+
+
+        // ----------------------------------------------------
+        // TASK FORM
+        // ----------------------------------------------------
+
+        $("task-form")
+            ?.addEventListener(
+                "submit",
+                createTask
+            );
+
+
+        $("analyze-task-button")
+            ?.addEventListener(
+                "click",
+                analyzeCurrentTask
+            );
+
+
+        // ----------------------------------------------------
+        // FILTERS
+        // ----------------------------------------------------
+
+        $("task-search")
+            ?.addEventListener(
+                "input",
+                loadTasks
+            );
+
+        [
+            "status-filter",
+            "priority-filter",
+            "due-filter",
+            "sort-filter",
+        ].forEach(id => {
+
+            $(id)?.addEventListener(
+                "change",
+                loadTasks
+            );
+        });
+
+
+        // ----------------------------------------------------
+        // DASHBOARD ACTIONS
+        // ----------------------------------------------------
+
+        $("hero-ai-button")
+            ?.addEventListener(
+                "click",
+                () =>
+                    switchView("ai")
+            );
+
+
+        $("plan-day-button")
+            ?.addEventListener(
+                "click",
+                () => {
 
-        // --------------------------------------------
-        // Successful creation
-        // --------------------------------------------
+                    switchView("ai");
 
-        const newTask =
-            await response.json();
+                    runQuickAI("plan");
+                }
+            );
 
 
-        console.log(
-            "Task created:",
-            newTask
-        );
+        $("view-all-tasks")
+            ?.addEventListener(
+                "click",
+                () =>
+                    switchView("tasks")
+            );
 
 
-        // Add task locally
-        tasks.unshift(newTask);
+        // ----------------------------------------------------
+        // NOTIFICATIONS
+        // ----------------------------------------------------
 
+        $("notification-button")
+            ?.addEventListener(
+                "click",
+                () => {
 
-        // Clear form
-        taskForm.reset();
+                    $("notification-panel")
+                        ?.classList.toggle(
+                            "hidden"
+                        );
+                }
+            );
 
 
-        // Close modal
-        closeTaskModal();
+        $("close-notifications")
+            ?.addEventListener(
+                "click",
+                () => {
 
+                    $("notification-panel")
+                        ?.classList.add(
+                            "hidden"
+                        );
+                }
+            );
 
-        // Update dashboard
-        renderTasks();
 
-        updateTaskStatistics();
+        $("refresh-reminders")
+            ?.addEventListener(
+                "click",
+                loadReminders
+            );
 
 
-        alert(
-            "Task created successfully!"
-        );
+        // ----------------------------------------------------
+        // AI FORM
+        // ----------------------------------------------------
 
-    }
+        $("ai-form")
+            ?.addEventListener(
+                "submit",
+                event => {
 
-    catch (error) {
+                    event.preventDefault();
 
-        console.error(
-            "CORTEX task creation error:",
-            error
-        );
+                    const input =
+                        $("ai-input");
 
-        alert(
-            "Unable to connect to the CORTEX server."
-        );
+                    const text =
+                        input.value.trim();
 
-    }
-
-}
-
-
-// ============================================================
-// FORM SUBMIT
-// ============================================================
-
-if (taskForm) {
-
-    taskForm.addEventListener(
-        "submit",
-        createTask
-    );
-
-}
-
-
-// ============================================================
-// FIND TASK CONTAINER
-// ============================================================
-
-function getTaskContainer() {
-
-    let container =
-        document.getElementById("tasks-list");
-
-
-    if (!container) {
-
-        container =
-            document.getElementById("task-list");
-
-    }
-
-
-    if (!container) {
-
-        container =
-            document.querySelector(".tasks-list");
-
-    }
-
-
-    if (!container) {
-
-        container =
-            document.querySelector(".task-list");
-
-    }
-
-
-    if (!container) {
-
-        console.warn(
-            "CORTEX: Task list container not found."
-        );
-
-        return null;
-
-    }
-
-
-    return container;
-
-}
-
-
-// ============================================================
-// RENDER TASKS
-// ============================================================
-
-function renderTasks() {
-
-    const container =
-        getTaskContainer();
-
-
-    if (!container) {
-        return;
-    }
-
-
-    container.innerHTML = "";
-
-
-    if (!tasks.length) {
-
-        container.innerHTML = `
-            <div class="cortex-empty-state">
-                <div style="font-size: 36px; margin-bottom: 12px;">
-                    ✦
-                </div>
-
-                <h3>No tasks yet</h3>
-
-                <p>
-                    Create your first task and let CORTEX
-                    organize your workspace.
-                </p>
-            </div>
-        `;
-
-        return;
-    }
-
-
-    tasks.forEach((task) => {
-
-        const taskElement =
-            document.createElement("div");
-
-
-        taskElement.className =
-            "cortex-task-card";
-
-
-        const completed =
-            task.status === "completed";
-
-
-        taskElement.innerHTML = `
-
-            <div class="cortex-task-main">
-
-                <div class="cortex-task-check">
-
-                    <input
-                        type="checkbox"
-                        class="task-complete-checkbox"
-                        data-id="${task.id}"
-                        ${completed ? "checked" : ""}
-                    >
-
-                </div>
-
-
-                <div class="cortex-task-content">
-
-                    <h3
-                        class="${completed ? "task-completed" : ""}"
-                    >
-                        ${escapeHtml(task.title)}
-                    </h3>
-
-
-                    ${
-                        task.description
-                            ? `
-                                <p>
-                                    ${escapeHtml(
-                                        task.description
-                                    )}
-                                </p>
-                              `
-                            : ""
+                    if (!text) {
+                        return;
                     }
 
+                    input.value = "";
 
-                    <div class="cortex-task-meta">
-
-                        <span class="task-priority ${getPriorityClass(task.priority)}">
-                            ${escapeHtml(
-                                task.priority || "medium"
-                            )}
-                        </span>
-
-
-                        ${
-                            task.due_date
-                                ? `
-                                    <span>
-                                        Due:
-                                        ${formatDate(
-                                            task.due_date
-                                        )}
-                                    </span>
-                                  `
-                                : ""
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div class="cortex-task-actions">
-
-                    <button
-                        type="button"
-                        class="task-delete-button"
-                        data-id="${task.id}"
-                        title="Delete task"
-                    >
-                        Delete
-                    </button>
-
-                </div>
-
-            </div>
-        `;
-
-
-        container.appendChild(
-            taskElement
-        );
-
-    });
-
-
-    // --------------------------------------------
-    // Complete buttons
-    // --------------------------------------------
-
-    container
-        .querySelectorAll(
-            ".task-complete-checkbox"
-        )
-        .forEach((checkbox) => {
-
-            checkbox.addEventListener(
-                "change",
-                async () => {
-
-                    const taskId =
-                        Number(
-                            checkbox.dataset.id
-                        );
-
-                    await toggleTask(
-                        taskId,
-                        checkbox.checked
-                    );
-
-                }
-            );
-
-        });
-
-
-    // --------------------------------------------
-    // Delete buttons
-    // --------------------------------------------
-
-    container
-        .querySelectorAll(
-            ".task-delete-button"
-        )
-        .forEach((button) => {
-
-            button.addEventListener(
-                "click",
-                async () => {
-
-                    const taskId =
-                        Number(
-                            button.dataset.id
-                        );
-
-                    await deleteTask(
-                        taskId
-                    );
-
-                }
-            );
-
-        });
-
-}
-
-
-// ============================================================
-// TOGGLE TASK COMPLETE
-// ============================================================
-
-async function toggleTask(
-    taskId,
-    completed
-) {
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/api/tasks/${taskId}`,
-                {
-                    method: "PUT",
-
-                    headers:
-                        getHeaders(),
-
-                    body:
-                        JSON.stringify({
-                            status:
-                                completed
-                                    ? "completed"
-                                    : "todo"
-                        })
+                    sendAIMessage(text);
                 }
             );
 
 
-        if (!response.ok) {
+        document
+            .querySelectorAll(
+                ".ai-suggestion"
+            )
+            .forEach(button => {
 
-            console.error(
-                "Unable to update task."
-            );
-
-            return;
-
-        }
-
-
-        const updatedTask =
-            await response.json();
-
-
-        tasks =
-            tasks.map(
-                (task) =>
-                    task.id === taskId
-                        ? updatedTask
-                        : task
-            );
-
-
-        renderTasks();
-
-        updateTaskStatistics();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Task update error:",
-            error
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// DELETE TASK
-// ============================================================
-
-async function deleteTask(
-    taskId
-) {
-
-    const confirmed =
-        confirm(
-            "Delete this task?"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/api/tasks/${taskId}`,
-                {
-                    method: "DELETE",
-
-                    headers:
-                        getHeaders()
-                }
-            );
-
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Delete failed:",
-                errorText
-            );
-
-            alert(
-                "Unable to delete task."
-            );
-
-            return;
-
-        }
-
-
-        tasks =
-            tasks.filter(
-                (task) =>
-                    task.id !== taskId
-            );
-
-
-        renderTasks();
-
-        updateTaskStatistics();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Task delete error:",
-            error
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// SEARCH TASKS
-// ============================================================
-
-function setupTaskSearch() {
-
-    const searchInput =
-        document.querySelector(
-            "#task-search, #search-tasks, input[placeholder*='Search tasks']"
-        );
-
-
-    if (!searchInput) {
-        return;
-    }
-
-
-    searchInput.addEventListener(
-        "input",
-        () => {
-
-            const search =
-                searchInput.value
-                    .trim()
-                    .toLowerCase();
-
-
-            const filteredTasks =
-                tasks.filter(
-                    (task) =>
-                        task.title
-                            .toLowerCase()
-                            .includes(search)
-                        ||
-                        (
-                            task.description || ""
+                button.addEventListener(
+                    "click",
+                    () =>
+                        sendAIMessage(
+                            button.dataset.aiPrompt
                         )
-                            .toLowerCase()
-                            .includes(search)
                 );
+            });
 
 
-            renderFilteredTasks(
-                filteredTasks
+        document
+            .querySelectorAll(
+                ".ai-action-card"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () =>
+                        runQuickAI(
+                            button.dataset.aiAction
+                        )
+                );
+            });
+
+
+        // ----------------------------------------------------
+        // CALENDAR
+        // ----------------------------------------------------
+
+        $("calendar-prev")
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    calendarDate =
+                        new Date(
+                            calendarDate.getFullYear(),
+                            calendarDate.getMonth() - 1,
+                            1
+                        );
+
+                    renderCalendar();
+                }
             );
 
-        }
-    );
 
-}
+        $("calendar-next")
+            ?.addEventListener(
+                "click",
+                () => {
 
+                    calendarDate =
+                        new Date(
+                            calendarDate.getFullYear(),
+                            calendarDate.getMonth() + 1,
+                            1
+                        );
 
-// ============================================================
-// RENDER FILTERED TASKS
-// ============================================================
-
-function renderFilteredTasks(
-    filteredTasks
-) {
-
-    const originalTasks =
-        tasks;
-
-
-    tasks =
-        filteredTasks;
-
-    renderTasks();
-
-    tasks =
-        originalTasks;
-
-}
+                    renderCalendar();
+                }
+            );
 
 
-// ============================================================
-// STATISTICS
-// ============================================================
+        $("calendar-today")
+            ?.addEventListener(
+                "click",
+                () => {
 
-function updateTaskStatistics() {
+                    calendarDate =
+                        new Date();
 
-    const total =
-        tasks.length;
-
-
-    const completed =
-        tasks.filter(
-            (task) =>
-                task.status === "completed"
-        ).length;
+                    renderCalendar();
+                }
+            );
 
 
-    const pending =
-        total - completed;
+        // ----------------------------------------------------
+        // KEYBOARD SHORTCUTS
+        // ----------------------------------------------------
 
+        document.addEventListener(
+            "keydown",
+            event => {
 
-    const totalElement =
-        document.getElementById(
-            "total-tasks"
-        );
+                const tag =
+                    document.activeElement
+                        ?.tagName
+                        ?.toLowerCase();
 
+                if (
+                    tag === "input" ||
+                    tag === "textarea" ||
+                    tag === "select"
+                ) {
+                    return;
+                }
 
-    const completedElement =
-        document.getElementById(
-            "completed-tasks"
-        );
+                if (
+                    event.key === "n" ||
+                    event.key === "N"
+                ) {
 
+                    event.preventDefault();
 
-    const pendingElement =
-        document.getElementById(
-            "pending-tasks"
-        );
+                    openTaskModal();
+                }
 
+                if (event.key === "/") {
 
-    if (totalElement) {
-        totalElement.textContent =
-            total;
-    }
+                    event.preventDefault();
 
+                    switchView("tasks");
 
-    if (completedElement) {
-        completedElement.textContent =
-            completed;
-    }
+                    setTimeout(
+                        () =>
+                            $("task-search")
+                                ?.focus(),
+                        50
+                    );
+                }
 
+                if (event.key === "Escape") {
 
-    if (pendingElement) {
-        pendingElement.textContent =
-            pending;
-    }
+                    closeTaskModal();
 
-}
-
-
-// ============================================================
-// HELPERS
-// ============================================================
-
-function escapeHtml(value) {
-
-    if (value === null ||
-        value === undefined) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-function formatDate(
-    dateString
-) {
-
-    try {
-
-        return new Date(
-            dateString
-        ).toLocaleDateString(
-            "en-IN",
-            {
-                day: "numeric",
-                month: "short",
-                year: "numeric"
+                    $("notification-panel")
+                        ?.classList.add(
+                            "hidden"
+                        );
+                }
             }
         );
 
+
+        // ----------------------------------------------------
+        // LOAD APP
+        // ----------------------------------------------------
+
+        try {
+
+            await loadProfile();
+            await loadTasks();
+
+        } catch (error) {
+
+            console.error(
+                "CORTEX initialization failed:",
+                error
+            );
+
+            showToast(
+                error.message ||
+                "Unable to load CORTEX.",
+                "error"
+            );
+        }
     }
-
-    catch {
-
-        return dateString;
-
-    }
-
-}
-
-
-function getPriorityClass(
-    priority
-) {
-
-    const value =
-        String(
-            priority || "medium"
-        ).toLowerCase();
-
-
-    if (value === "high") {
-        return "priority-high";
-    }
-
-
-    if (value === "low") {
-        return "priority-low";
-    }
-
-
-    return "priority-medium";
-
-}
-
-
-// ============================================================
-// INITIALIZATION
-// ============================================================
-
-async function initializeDashboard() {
-
-    console.log(
-        "CORTEX dashboard initialized."
-    );
-
-
-    // Load saved tasks from PostgreSQL
-    await loadTasks();
-
-
-    // Enable task search
-    setupTaskSearch();
-
-
-    updateTaskStatistics();
-
-}
-
-
-initializeDashboard();
+);

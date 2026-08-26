@@ -9,6 +9,10 @@ from app.database import Base
 class User(Base):
     __tablename__ = "users"
 
+    # ========================================================
+    # BASIC USER INFORMATION
+    # ========================================================
+
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -47,6 +51,10 @@ class User(Base):
         nullable=True,
     )
 
+    # ========================================================
+    # PROFILE
+    # ========================================================
+
     theme: Mapped[str] = mapped_column(
         String(20),
         default="dark",
@@ -58,21 +66,35 @@ class User(Base):
         nullable=True,
     )
 
+    # ========================================================
+    # PASSWORD RESET
+    # ========================================================
+
     reset_token_hash: Mapped[str | None] = mapped_column(
         String(128),
         nullable=True,
     )
 
-    reset_token_expires_at: Mapped[datetime | None] = mapped_column(
+    reset_token_expires_at: Mapped[
+        datetime | None
+    ] = mapped_column(
         DateTime,
         nullable=True,
     )
+
+    # ========================================================
+    # ACCOUNT CREATION
+    # ========================================================
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
         nullable=False,
     )
+
+    # ========================================================
+    # TASK RELATIONSHIP
+    # ========================================================
 
     tasks = relationship(
         "Task",

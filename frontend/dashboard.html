@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
 
@@ -9,310 +8,633 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>CORTEX — Dashboard</title>
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
+    <meta
+        name="description"
+        content="CORTEX AI Smart Task Workspace"
     >
 
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
+    <meta
+        name="referrer"
+        content="strict-origin-when-cross-origin"
     >
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <title>CORTEX — Workspace</title>
 
-    <link
-        rel="stylesheet"
-        href="dashboard.css"
-    >
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
-<body>
+<body class="dashboard-body">
 
-    <!-- SIDEBAR -->
+    <!-- =========================================================
+         MOBILE OVERLAY
+    ========================================================== -->
 
-    <aside class="sidebar">
-
-        <div class="sidebar-brand">
-
-            <div class="logo-mark">
-                C
-            </div>
-
-            <span>CORTEX</span>
-
-        </div>
+    <div
+        id="sidebar-overlay"
+        class="sidebar-overlay"
+    ></div>
 
 
-        <nav class="navigation">
+    <!-- =========================================================
+         APP SHELL
+    ========================================================== -->
 
-            <button
-                class="nav-item active"
-                data-section="overview"
-            >
-                <span>◈</span>
-                Overview
-            </button>
-
-            <button
-                class="nav-item"
-                data-section="tasks"
-            >
-                <span>✓</span>
-                My Tasks
-            </button>
-
-            <button
-                class="nav-item"
-                data-section="ai"
-            >
-                <span>✦</span>
-                AI Intelligence
-            </button>
-
-            <button
-                class="nav-item"
-                data-section="profile"
-            >
-                <span>◎</span>
-                Profile
-            </button>
-
-        </nav>
+    <div class="app-shell">
 
 
-        <div class="sidebar-bottom">
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
 
-            <div class="ai-status">
-
-                <span class="status-dot"></span>
-
-                <div>
-
-                    <strong>
-                        CORTEX AI
-                    </strong>
-
-                    <small>
-                        Intelligence active
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <button
-                id="logout-button"
-                class="logout-button"
-            >
-                Logout
-            </button>
-
-        </div>
-
-    </aside>
-
-
-    <!-- MAIN CONTENT -->
-
-    <main class="main-content">
-
-        <!-- TOP BAR -->
-
-        <header class="topbar">
-
-            <div>
-
-                <span class="topbar-label">
-                    PERSONAL WORKSPACE
-                </span>
-
-                <h1 id="welcome-heading">
-                    Good morning
-                </h1>
-
-            </div>
-
-
-            <div class="topbar-actions">
-
-                <button class="icon-button">
-                    ◐
-                </button>
-
-                <div class="user-avatar">
-                    U
-                </div>
-
-            </div>
-
-        </header>
-
-
-        <!-- OVERVIEW -->
-
-        <section
-            id="overview-section"
-            class="page-section"
+        <aside
+            id="sidebar"
+            class="sidebar"
         >
 
-            <div class="hero-card">
+            <div class="sidebar-top">
 
-                <div>
+                <a
+                    href="dashboard.html"
+                    class="sidebar-brand"
+                >
+                    <div class="logo">C</div>
 
-                    <span class="hero-label">
-                        TODAY'S INTELLIGENCE
-                    </span>
-
-                    <h2>
-                        Focus on what
-                        <span>matters most.</span>
-                    </h2>
-
-                    <p>
-                        CORTEX analyzes your workload,
-                        deadlines and personal context
-                        to help you decide what deserves
-                        your attention first.
-                    </p>
-
-                </div>
+                    <div>
+                        <strong>CORTEX</strong>
+                        <span>INTELLIGENCE WORKSPACE</span>
+                    </div>
+                </a>
 
 
-                <div class="brain-visual">
+                <!-- USER MINI PROFILE -->
 
-                    <div class="brain-ring ring-one"></div>
-                    <div class="brain-ring ring-two"></div>
-
-                    <div class="brain-core">
+                <div
+                    id="sidebar-user"
+                    class="sidebar-user"
+                >
+                    <div
+                        id="sidebar-avatar"
+                        class="avatar"
+                    >
                         C
                     </div>
 
+                    <div class="sidebar-user-copy">
+
+                        <strong
+                            id="sidebar-name"
+                        >
+                            Loading...
+                        </strong>
+
+                        <span
+                            id="sidebar-email"
+                        >
+                            Loading...
+                        </span>
+
+                    </div>
+
                 </div>
+
+
+                <!-- NAVIGATION -->
+
+                <nav class="main-nav">
+
+                    <button
+                        class="nav-item active"
+                        data-view="dashboard"
+                    >
+                        <span class="nav-icon">⌂</span>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button
+                        class="nav-item"
+                        data-view="tasks"
+                    >
+                        <span class="nav-icon">✓</span>
+                        <span>My Tasks</span>
+                    </button>
+
+                    <button
+                        class="nav-item"
+                        data-view="board"
+                    >
+                        <span class="nav-icon">▦</span>
+                        <span>Board</span>
+                    </button>
+
+                    <button
+                        class="nav-item"
+                        data-view="calendar"
+                    >
+                        <span class="nav-icon">□</span>
+                        <span>Calendar</span>
+                    </button>
+
+                    <button
+                        class="nav-item ai-nav"
+                        data-view="ai"
+                    >
+                        <span class="nav-icon">✦</span>
+                        <span>CORTEX AI</span>
+                        <span class="ai-pulse"></span>
+                    </button>
+
+                </nav>
+
+
+                <!-- QUICK ACTION -->
+
+                <button
+                    id="quick-add-task"
+                    class="quick-add"
+                >
+                    <span>+</span>
+                    New task
+                    <kbd>N</kbd>
+                </button>
 
             </div>
 
 
-            <!-- STAT CARDS -->
+            <!-- SIDEBAR BOTTOM -->
 
-            <div class="stats-grid">
+            <div class="sidebar-bottom">
 
-                <div class="stat-card">
+                <button
+                    id="open-profile"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">◉</span>
+                    <span>Profile</span>
+                </button>
 
-                    <span class="stat-icon">
-                        ✓
+                <button
+                    id="toggle-theme"
+                    class="nav-item"
+                >
+                    <span
+                        id="theme-icon"
+                        class="nav-icon"
+                    >
+                        ☼
                     </span>
 
-                    <div>
-
-                        <span class="stat-label">
-                            TOTAL TASKS
-                        </span>
-
-                        <strong id="total-tasks">
-                            0
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-icon purple">
-                        !
+                    <span
+                        id="theme-label"
+                    >
+                        Light mode
                     </span>
+                </button>
+
+                <button
+                    id="logout-button"
+                    class="nav-item danger-nav"
+                >
+                    <span class="nav-icon">↪</span>
+                    <span>Sign out</span>
+                </button>
+
+                <div class="security-mini">
+
+                    <span>🔒</span>
 
                     <div>
-
-                        <span class="stat-label">
-                            HIGH PRIORITY
-                        </span>
-
-                        <strong id="high-priority">
-                            0
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-icon cyan">
-                        ◷
-                    </span>
-
-                    <div>
-
-                        <span class="stat-label">
-                            COMPLETED
-                        </span>
-
-                        <strong id="completed-tasks">
-                            0
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-icon green">
-                        %
-                    </span>
-
-                    <div>
-
-                        <span class="stat-label">
-                            PRODUCTIVITY
-                        </span>
-
-                        <strong id="productivity">
-                            0%
-                        </strong>
-
+                        <strong>Protected workspace</strong>
+                        <small>
+                            Secure authentication enabled
+                        </small>
                     </div>
 
                 </div>
 
             </div>
 
+        </aside>
 
-            <!-- TODAY + AI -->
 
-            <div class="content-grid">
+        <!-- =====================================================
+             MAIN AREA
+        ====================================================== -->
 
-                <div class="panel">
+        <main class="main-area">
 
-                    <div class="panel-header">
+
+            <!-- =================================================
+                 TOPBAR
+            ================================================== -->
+
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <button
+                        id="mobile-menu"
+                        class="icon-button mobile-menu-button"
+                        aria-label="Open navigation"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+
+                        <span
+                            id="page-eyebrow"
+                            class="topbar-eyebrow"
+                        >
+                            PERSONAL COMMAND CENTER
+                        </span>
+
+                        <h1
+                            id="page-title"
+                        >
+                            Good morning
+                        </h1>
+
+                    </div>
+
+                </div>
+
+
+                <div class="topbar-actions">
+
+                    <button
+                        id="global-search-button"
+                        class="search-launcher"
+                    >
+                        <span>⌕</span>
+                        <span>Search anything...</span>
+                        <kbd>/</kbd>
+                    </button>
+
+                    <button
+                        id="notification-button"
+                        class="icon-button"
+                        aria-label="Notifications"
+                    >
+                        ♢
+                        <span
+                            id="notification-count"
+                            class="notification-count hidden"
+                        >
+                            0
+                        </span>
+                    </button>
+
+                    <button
+                        id="top-avatar"
+                        class="top-avatar"
+                        aria-label="Open profile"
+                    >
+                        C
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 DASHBOARD VIEW
+            ================================================== -->
+
+            <section
+                id="dashboard-view"
+                class="page-view active-view"
+            >
+
+                <!-- =================================================
+                     HERO
+                ================================================== -->
+
+                <section class="hero-panel">
+
+                    <div class="hero-panel-copy">
+
+                        <span class="hero-kicker">
+                            CORTEX INTELLIGENCE
+                        </span>
+
+                        <h2>
+                            Turn your workload
+                            <span>into momentum.</span>
+                        </h2>
+
+                        <p>
+                            Organize your priorities, understand
+                            your workload and let CORTEX help you
+                            decide what matters next.
+                        </p>
+
+                        <div class="hero-actions">
+
+                            <button
+                                id="hero-ai-button"
+                                class="primary-action"
+                            >
+                                <span>✦</span>
+                                Ask CORTEX
+                            </button>
+
+                            <button
+                                id="hero-new-task"
+                                class="secondary-action"
+                            >
+                                + New task
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="hero-orb">
+
+                        <div class="orb-core">
+                            <span>AI</span>
+                        </div>
+
+                        <div class="orb-ring ring-one"></div>
+                        <div class="orb-ring ring-two"></div>
+                        <div class="orb-ring ring-three"></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     STATISTICS
+                ================================================== -->
+
+                <section class="stats-grid">
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon purple">
+                            ◫
+                        </div>
 
                         <div>
 
-                            <span class="panel-label">
-                                YOUR TASKS
+                            <span>Total tasks</span>
+
+                            <strong
+                                id="stat-total"
+                            >
+                                0
+                            </strong>
+
+                            <small>
+                                Everything in your workspace
+                            </small>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon green">
+                            ✓
+                        </div>
+
+                        <div>
+
+                            <span>Completed</span>
+
+                            <strong
+                                id="stat-completed"
+                            >
+                                0
+                            </strong>
+
+                            <small
+                                id="stat-completion-rate"
+                            >
+                                0% completion rate
+                            </small>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon blue">
+                            ◌
+                        </div>
+
+                        <div>
+
+                            <span>In progress</span>
+
+                            <strong
+                                id="stat-progress"
+                            >
+                                0
+                            </strong>
+
+                            <small>
+                                Active work
+                            </small>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="stat-card danger">
+
+                        <div class="stat-icon red">
+                            !
+                        </div>
+
+                        <div>
+
+                            <span>Overdue</span>
+
+                            <strong
+                                id="stat-overdue"
+                            >
+                                0
+                            </strong>
+
+                            <small>
+                                Needs attention
+                            </small>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="stat-card warning">
+
+                        <div class="stat-icon orange">
+                            ⚡
+                        </div>
+
+                        <div>
+
+                            <span>Urgent</span>
+
+                            <strong
+                                id="stat-urgent"
+                            >
+                                0
+                            </strong>
+
+                            <small>
+                                High-impact tasks
+                            </small>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- =================================================
+                     TWO COLUMN WORKSPACE
+                ================================================== -->
+
+                <section class="dashboard-grid">
+
+
+                    <!-- =================================================
+                         TODAY'S FOCUS
+                    ================================================== -->
+
+                    <article class="workspace-panel focus-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <span class="panel-kicker">
+                                    TODAY
+                                </span>
+
+                                <h3>
+                                    Your next best moves
+                                </h3>
+
+                            </div>
+
+                            <button
+                                id="plan-day-button"
+                                class="mini-action"
+                            >
+                                ✦ Plan my day
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            id="focus-task-list"
+                            class="focus-task-list"
+                        >
+
+                            <div class="empty-state">
+                                <div>✦</div>
+                                <strong>
+                                    Your workspace is ready.
+                                </strong>
+                                <span>
+                                    Create a task and CORTEX
+                                    will help you prioritize it.
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- =================================================
+                         REMINDERS
+                    ================================================== -->
+
+                    <article class="workspace-panel reminder-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+
+                                <span class="panel-kicker">
+                                    SMART REMINDERS
+                                </span>
+
+                                <h3>
+                                    What's coming up
+                                </h3>
+
+                            </div>
+
+                            <button
+                                id="refresh-reminders"
+                                class="icon-button small"
+                                aria-label="Refresh reminders"
+                            >
+                                ↻
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            id="reminder-list"
+                            class="reminder-list"
+                        >
+
+                            <div class="empty-state compact">
+                                <div>◷</div>
+                                <span>
+                                    No urgent deadlines right now.
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- =================================================
+                     RECENT TASKS
+                ================================================== -->
+
+                <section class="workspace-panel recent-panel">
+
+                    <div class="panel-heading">
+
+                        <div>
+
+                            <span class="panel-kicker">
+                                RECENT ACTIVITY
                             </span>
 
                             <h3>
-                                Today's focus
+                                Your tasks
                             </h3>
 
                         </div>
 
                         <button
-                            id="view-tasks-button"
-                            class="text-button"
+                            id="view-all-tasks"
+                            class="text-action"
                         >
                             View all →
                         </button>
@@ -320,364 +642,734 @@
                     </div>
 
 
-                    <div id="today-tasks">
+                    <div
+                        id="recent-task-list"
+                        class="recent-task-list"
+                    >
 
                         <div class="empty-state">
+                            <div>✓</div>
+                            <span>
+                                No tasks yet.
+                            </span>
+                        </div>
 
-                            <div class="empty-icon">
-                                ✓
-                            </div>
+                    </div>
 
-                            <h4>
-                                No tasks yet
-                            </h4>
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 TASKS VIEW
+            ================================================== -->
+
+            <section
+                id="tasks-view"
+                class="page-view"
+            >
+
+                <div class="view-header">
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            TASK MANAGEMENT
+                        </span>
+
+                        <h2>
+                            My Tasks
+                        </h2>
+
+                        <p>
+                            Search, filter and organize every
+                            task in your workspace.
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="tasks-new-button"
+                        class="primary-action"
+                    >
+                        + New task
+                    </button>
+
+                </div>
+
+
+                <!-- FILTER BAR -->
+
+                <div class="filter-bar">
+
+                    <div class="filter-search">
+
+                        <span>⌕</span>
+
+                        <input
+                            id="task-search"
+                            type="search"
+                            placeholder="Search tasks..."
+                        >
+
+                    </div>
+
+
+                    <select
+                        id="status-filter"
+                        class="filter-select"
+                    >
+                        <option value="all">
+                            All statuses
+                        </option>
+
+                        <option value="todo">
+                            To do
+                        </option>
+
+                        <option value="in_progress">
+                            In progress
+                        </option>
+
+                        <option value="done">
+                            Done
+                        </option>
+
+                    </select>
+
+
+                    <select
+                        id="priority-filter"
+                        class="filter-select"
+                    >
+                        <option value="all">
+                            All priorities
+                        </option>
+
+                        <option value="urgent">
+                            Urgent
+                        </option>
+
+                        <option value="high">
+                            High
+                        </option>
+
+                        <option value="medium">
+                            Medium
+                        </option>
+
+                        <option value="low">
+                            Low
+                        </option>
+
+                    </select>
+
+
+                    <select
+                        id="due-filter"
+                        class="filter-select"
+                    >
+                        <option value="all">
+                            Any deadline
+                        </option>
+
+                        <option value="overdue">
+                            Overdue
+                        </option>
+
+                        <option value="today">
+                            Due today
+                        </option>
+
+                        <option value="upcoming">
+                            Upcoming
+                        </option>
+
+                    </select>
+
+
+                    <select
+                        id="sort-filter"
+                        class="filter-select"
+                    >
+                        <option value="newest">
+                            Newest
+                        </option>
+
+                        <option value="oldest">
+                            Oldest
+                        </option>
+
+                        <option value="priority">
+                            Priority
+                        </option>
+
+                        <option value="due">
+                            Due date
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- TASK LIST -->
+
+                <div
+                    id="task-list"
+                    class="task-list"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================================
+                 BOARD VIEW
+            ================================================== -->
+
+            <section
+                id="board-view"
+                class="page-view"
+            >
+
+                <div class="view-header">
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            VISUAL WORKFLOW
+                        </span>
+
+                        <h2>
+                            CORTEX Board
+                        </h2>
+
+                        <p>
+                            A Trello-style command board for your
+                            workflow.
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="board-new-button"
+                        class="primary-action"
+                    >
+                        + New task
+                    </button>
+
+                </div>
+
+
+                <div class="board-grid">
+
+                    <section class="board-column">
+
+                        <div class="board-column-heading">
+                            <span class="status-dot todo-dot"></span>
+
+                            <strong>To do</strong>
+
+                            <span
+                                id="board-todo-count"
+                                class="column-count"
+                            >
+                                0
+                            </span>
+                        </div>
+
+                        <div
+                            id="board-todo"
+                            class="board-task-stack"
+                            data-status="todo"
+                        ></div>
+
+                    </section>
+
+
+                    <section class="board-column">
+
+                        <div class="board-column-heading">
+                            <span class="status-dot progress-dot"></span>
+
+                            <strong>In progress</strong>
+
+                            <span
+                                id="board-progress-count"
+                                class="column-count"
+                            >
+                                0
+                            </span>
+                        </div>
+
+                        <div
+                            id="board-progress"
+                            class="board-task-stack"
+                            data-status="in_progress"
+                        ></div>
+
+                    </section>
+
+
+                    <section class="board-column">
+
+                        <div class="board-column-heading">
+                            <span class="status-dot done-dot"></span>
+
+                            <strong>Done</strong>
+
+                            <span
+                                id="board-done-count"
+                                class="column-count"
+                            >
+                                0
+                            </span>
+                        </div>
+
+                        <div
+                            id="board-done"
+                            class="board-task-stack"
+                            data-status="done"
+                        ></div>
+
+                    </section>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 CALENDAR VIEW
+            ================================================== -->
+
+            <section
+                id="calendar-view"
+                class="page-view"
+            >
+
+                <div class="view-header">
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            DEADLINES
+                        </span>
+
+                        <h2>
+                            Calendar
+                        </h2>
+
+                        <p>
+                            See your workload around the deadlines
+                            that matter.
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="calendar-today"
+                        class="secondary-action"
+                    >
+                        Today
+                    </button>
+
+                </div>
+
+
+                <div class="calendar-toolbar">
+
+                    <button
+                        id="calendar-prev"
+                        class="icon-button small"
+                    >
+                        ←
+                    </button>
+
+                    <strong
+                        id="calendar-month"
+                    >
+                        Month
+                    </strong>
+
+                    <button
+                        id="calendar-next"
+                        class="icon-button small"
+                    >
+                        →
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="calendar-grid"
+                    class="calendar-grid"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================================
+                 AI VIEW
+            ================================================== -->
+
+            <section
+                id="ai-view"
+                class="page-view"
+            >
+
+                <div class="ai-page">
+
+                    <div class="ai-page-header">
+
+                        <div>
+
+                            <span class="panel-kicker">
+                                ACTIVE INTELLIGENCE
+                            </span>
+
+                            <h2>
+                                CORTEX AI
+                            </h2>
 
                             <p>
-                                Add your first task to
-                                let CORTEX start working.
+                                Your AI productivity copilot.
+                                Ask about your actual workload,
+                                create plans and turn ideas into
+                                structured work.
                             </p>
 
-                            <button
-                                id="create-task-button"
-                                class="small-primary"
-                            >
-                                + Add task
-                            </button>
+                        </div>
+
+                        <div class="ai-status">
+
+                            <span class="ai-status-dot"></span>
+
+                            AI online
 
                         </div>
 
                     </div>
 
-                </div>
+
+                    <div class="ai-workspace">
 
 
-                <div class="panel ai-panel">
+                        <!-- AI CHAT -->
 
-                    <div class="panel-header">
+                        <section class="ai-chat-panel">
 
-                        <div>
+                            <div class="ai-chat-top">
 
-                            <span class="panel-label">
-                                CORTEX AI
+                                <div class="ai-avatar">
+                                    ✦
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        CORTEX Copilot
+                                    </strong>
+
+                                    <span>
+                                        Powered by your task context
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                id="ai-messages"
+                                class="ai-messages"
+                            >
+
+                                <div class="ai-message assistant">
+
+                                    <div class="message-avatar">
+                                        ✦
+                                    </div>
+
+                                    <div class="message-bubble">
+
+                                        <strong>
+                                            Hey, I'm CORTEX.
+                                        </strong>
+
+                                        <p>
+                                            I can prioritize your tasks,
+                                            plan your day, break work into
+                                            subtasks and help you decide
+                                            what to do next.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <form
+                                id="ai-form"
+                                class="ai-composer"
+                            >
+
+                                <textarea
+                                    id="ai-input"
+                                    rows="2"
+                                    placeholder="Ask CORTEX anything about your workload..."
+                                ></textarea>
+
+                                <button
+                                    type="submit"
+                                    class="ai-send"
+                                    aria-label="Send AI message"
+                                >
+                                    →
+                                </button>
+
+                            </form>
+
+                            <div class="ai-shortcuts">
+
+                                <button
+                                    class="ai-suggestion"
+                                    data-ai-prompt="What should I work on first?"
+                                >
+                                    What should I work on first?
+                                </button>
+
+                                <button
+                                    class="ai-suggestion"
+                                    data-ai-prompt="Plan my day based on my current tasks."
+                                >
+                                    Plan my day
+                                </button>
+
+                                <button
+                                    class="ai-suggestion"
+                                    data-ai-prompt="Which of my tasks are overdue or at risk?"
+                                >
+                                    Find risks
+                                </button>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- AI ACTIONS -->
+
+                        <aside class="ai-actions-panel">
+
+                            <span class="panel-kicker">
+                                QUICK INTELLIGENCE
                             </span>
 
                             <h3>
-                                Intelligence insight
+                                Let CORTEX do the thinking
                             </h3>
 
-                        </div>
 
-                        <span class="ai-badge">
-                            AI
-                        </span>
+                            <button
+                                class="ai-action-card"
+                                data-ai-action="plan"
+                            >
 
-                    </div>
+                                <span class="action-icon">
+                                    ◈
+                                </span>
 
+                                <span>
+                                    <strong>
+                                        Plan my day
+                                    </strong>
 
-                    <div class="ai-insight">
+                                    <small>
+                                        Build a realistic priority order
+                                    </small>
+                                </span>
 
-                        <div class="ai-icon">
-                            ✦
-                        </div>
+                                <b>→</b>
 
-                        <div>
+                            </button>
 
-                            <strong>
-                                Your workspace is ready.
-                            </strong>
 
-                            <p>
-                                Add tasks and CORTEX will
-                                analyze deadlines, workload
-                                and your personal context
-                                to help prioritize them.
-                            </p>
+                            <button
+                                class="ai-action-card"
+                                data-ai-action="prioritize"
+                            >
 
-                        </div>
+                                <span class="action-icon">
+                                    ↑
+                                </span>
 
-                    </div>
+                                <span>
+                                    <strong>
+                                        Prioritize tasks
+                                    </strong>
 
-                </div>
+                                    <small>
+                                        Find what deserves attention first
+                                    </small>
+                                </span>
 
-            </div>
+                                <b>→</b>
 
-        </section>
+                            </button>
 
 
-        <!-- TASKS SECTION -->
+                            <button
+                                class="ai-action-card"
+                                data-ai-action="overdue"
+                            >
 
-        <section
-            id="tasks-section"
-            class="page-section hidden"
-        >
+                                <span class="action-icon">
+                                    !
+                                </span>
 
-            <div class="section-heading">
+                                <span>
+                                    <strong>
+                                        Find overdue work
+                                    </strong>
 
-                <div>
+                                    <small>
+                                        Surface deadlines at risk
+                                    </small>
+                                </span>
 
-                    <span class="topbar-label">
-                        TASK MANAGEMENT
-                    </span>
+                                <b>→</b>
 
-                    <h2>
-                        My Tasks
-                    </h2>
+                            </button>
 
-                </div>
 
-                <button
-                    id="add-task-button"
-                    class="primary-action"
-                >
-                    + New task
-                </button>
+                            <button
+                                class="ai-action-card"
+                                data-ai-action="workload"
+                            >
 
-            </div>
+                                <span class="action-icon">
+                                    ◌
+                                </span>
 
+                                <span>
+                                    <strong>
+                                        Analyze workload
+                                    </strong>
 
-            <div class="task-toolbar">
+                                    <small>
+                                        Understand where your time goes
+                                    </small>
+                                </span>
 
-                <input
-                    id="task-search"
-                    type="text"
-                    placeholder="Search tasks..."
-                >
+                                <b>→</b>
 
-                <select id="task-filter">
+                            </button>
 
-                    <option value="all">
-                        All tasks
-                    </option>
 
-                    <option value="todo">
-                        To do
-                    </option>
+                            <div class="ai-note">
 
-                    <option value="in_progress">
-                        In progress
-                    </option>
+                                <span>🔐</span>
 
-                    <option value="done">
-                        Completed
-                    </option>
+                                <p>
+                                    AI requests are processed
+                                    server-side. Your API key
+                                    is never exposed to the browser.
+                                </p>
 
-                </select>
+                            </div>
 
-            </div>
-
-
-            <div
-                id="task-list"
-                class="task-list"
-            ></div>
-
-        </section>
-
-
-        <!-- AI SECTION -->
-
-        <section
-            id="ai-section"
-            class="page-section hidden"
-        >
-
-            <div class="section-heading">
-
-                <div>
-
-                    <span class="topbar-label">
-                        PERSONAL INTELLIGENCE
-                    </span>
-
-                    <h2>
-                        CORTEX AI
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div class="ai-large-card">
-
-                <div class="ai-large-icon">
-                    ✦
-                </div>
-
-                <div>
-
-                    <span class="hero-label">
-                        SMART PRIORITIZATION
-                    </span>
-
-                    <h2>
-                        Your tasks,
-                        intelligently organized.
-                    </h2>
-
-                    <p>
-                        CORTEX will consider your
-                        profile, available time,
-                        deadlines, workload and
-                        task context when generating
-                        recommendations.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- PROFILE -->
-
-        <section
-            id="profile-section"
-            class="page-section hidden"
-        >
-
-            <div class="section-heading">
-
-                <div>
-
-                    <span class="topbar-label">
-                        PERSONAL CONTEXT
-                    </span>
-
-                    <h2>
-                        Your Profile
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div class="profile-card">
-
-                <div class="profile-avatar">
-                    U
-                </div>
-
-                <div class="profile-info">
-
-                    <h3 id="profile-name">
-                        User
-                    </h3>
-
-                    <p id="profile-email">
-                        —
-                    </p>
-
-                    <div class="profile-details">
-
-                        <div>
-                            <span>AGE</span>
-                            <strong id="profile-age">
-                                —
-                            </strong>
-                        </div>
-
-                        <div>
-                            <span>GOAL</span>
-                            <strong id="profile-goal">
-                                —
-                            </strong>
-                        </div>
-
-                        <div>
-                            <span>AVAILABLE HOURS</span>
-                            <strong id="profile-hours">
-                                —
-                            </strong>
-                        </div>
+                        </aside>
 
                     </div>
 
                 </div>
 
-            </div>
+            </section>
 
-        </section>
+        </main>
 
-    </main>
+    </div>
 
 
-    <!-- ADD TASK MODAL -->
+    <!-- =========================================================
+         TASK MODAL
+    ========================================================== -->
 
     <div
         id="task-modal"
         class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-modal-title"
     >
 
-        <div class="modal-card">
+        <div
+            class="modal-backdrop"
+            data-close-modal
+        ></div>
 
-            <div class="modal-header">
+        <section class="modal-card">
 
-                <div>
+            <button
+                class="modal-close"
+                data-close-modal
+                aria-label="Close"
+            >
+                ×
+            </button>
 
-                    <span class="topbar-label">
-                        NEW TASK
-                    </span>
+            <span class="panel-kicker">
+                WORKSPACE ACTION
+            </span>
 
-                    <h2>
-                        Add a task
-                    </h2>
+            <h2 id="task-modal-title">
+                Create task
+            </h2>
 
-                </div>
-
-                <button
-                    id="close-modal"
-                    class="close-button"
-                >
-                    ×
-                </button>
-
-            </div>
+            <p class="modal-subtitle">
+                Describe the work. CORTEX can suggest
+                priority and subtasks for you.
+            </p>
 
 
             <form id="task-form">
 
-                <div class="form-group">
-
-                    <label>
-                        Task title
-                    </label>
+                <label class="form-label">
+                    Task title
 
                     <input
-                        id="task-title"
+                        id="task-title-input"
                         type="text"
-                        placeholder="What needs to be done?"
+                        maxlength="255"
+                        placeholder="What needs to get done?"
                         required
                     >
+                </label>
 
-                </div>
 
-
-                <div class="form-group">
-
-                    <label>
-                        Description
-                    </label>
+                <label class="form-label">
+                    Description
 
                     <textarea
-                        id="task-description"
+                        id="task-description-input"
+                        rows="4"
+                        maxlength="5000"
                         placeholder="Add more context..."
                     ></textarea>
+                </label>
 
-                </div>
 
+                <div class="form-grid-3">
 
-                <div class="two-column">
+                    <label class="form-label">
+                        Priority
 
-                    <div class="form-group">
-
-                        <label>
-                            Priority
-                        </label>
-
-                        <select id="task-priority">
+                        <select id="task-priority-input">
 
                             <option value="low">
                                 Low
@@ -694,43 +1386,161 @@
                                 High
                             </option>
 
+                            <option value="urgent">
+                                Urgent
+                            </option>
+
                         </select>
+                    </label>
 
-                    </div>
+
+                    <label class="form-label">
+                        Status
+
+                        <select id="task-status-input">
+
+                            <option value="todo">
+                                To do
+                            </option>
+
+                            <option value="in_progress">
+                                In progress
+                            </option>
+
+                            <option value="done">
+                                Done
+                            </option>
+
+                        </select>
+                    </label>
 
 
-                    <div class="form-group">
-
-                        <label>
-                            Due date
-                        </label>
+                    <label class="form-label">
+                        Due date
 
                         <input
-                            id="task-due-date"
+                            id="task-due-input"
                             type="datetime-local"
                         >
-
-                    </div>
+                    </label>
 
                 </div>
 
 
-                <button
-                    type="submit"
-                    class="primary-action full"
-                >
-                    Create task
-                </button>
+                <div class="ai-suggestion-box">
+
+                    <div>
+
+                        <strong>
+                            ✦ AI suggestion
+                        </strong>
+
+                        <span
+                            id="task-ai-suggestion"
+                        >
+                            Let CORTEX analyze this task.
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="analyze-task-button"
+                        class="mini-action"
+                    >
+                        Analyze
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="generated-subtasks"
+                    class="generated-subtasks"
+                ></div>
+
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="secondary-action"
+                        data-close-modal
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-action"
+                    >
+                        Create task
+                    </button>
+
+                </div>
+
+                <p
+                    id="task-form-message"
+                    class="form-message"
+                ></p>
 
             </form>
 
-        </div>
+        </section>
 
     </div>
+
+
+    <!-- =========================================================
+         NOTIFICATION PANEL
+    ========================================================== -->
+
+    <aside
+        id="notification-panel"
+        class="notification-panel hidden"
+    >
+
+        <div class="panel-heading">
+
+            <div>
+                <span class="panel-kicker">
+                    ALERTS
+                </span>
+
+                <h3>
+                    Notifications
+                </h3>
+            </div>
+
+            <button
+                id="close-notifications"
+                class="icon-button small"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div
+            id="notification-list"
+            class="notification-list"
+        ></div>
+
+    </aside>
+
+
+    <!-- =========================================================
+         TOAST
+    ========================================================== -->
+
+    <div
+        id="toast-container"
+        class="toast-container"
+        aria-live="polite"
+    ></div>
 
 
     <script src="dashboard.js"></script>
 
 </body>
-
 </html>
