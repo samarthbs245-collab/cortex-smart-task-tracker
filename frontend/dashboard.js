@@ -1615,10 +1615,10 @@ async function setTaskStatus(id, status) {
 // ============================================================
 
 async function deleteTask(id) {
-    const confirmDelete =
-        window.confirm(
-            "Delete this task permanently?"
-        );
+    const confirmDelete = await showConfirmModal(
+        "Delete task",
+        "Are you sure you want to delete this task permanently?"
+    );
 
     if (!confirmDelete) {
         return;
