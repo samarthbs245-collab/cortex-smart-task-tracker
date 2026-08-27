@@ -2445,6 +2445,13 @@ document.addEventListener(
                     $("csv-file-input")?.click();
                 }
             );
+        $("import-csv-modal-button")
+            ?.addEventListener(
+                "click",
+                () => {
+                    $("csv-file-input")?.click();
+                }
+            );    
 
         $("csv-file-input")
             ?.addEventListener(
