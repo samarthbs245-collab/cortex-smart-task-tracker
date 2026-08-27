@@ -692,14 +692,33 @@
 
                     </div>
 
-                    <button
-                        id="tasks-new-button"
-                        class="primary-action"
-                    >
-                        + New task
-                    </button>
+                   <div class="task-header-actions">
+
+                        <button
+                            id="import-csv-button"
+                            class="secondary-action"
+                            type="button"
+                        >
+                            ↑ Import CSV
+                        </button>
+
+                        <button
+                            id="tasks-new-button"
+                            class="primary-action"
+                        >
+                            + New task
+                        </button>
+
+                    </div>
 
                 </div>
+                <input
+                    type="file"
+                    id="csv-file-input"
+                    accept=".csv,text/csv"
+                    multiple
+                    hidden
+                >
 
 
                 <!-- FILTER BAR -->

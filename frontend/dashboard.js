@@ -429,6 +429,70 @@ async function loadTasks() {
     await loadReminders();
 }
 
+// ============================================================
+// IMPORT CSV
+// ============================================================
+
+async function importCSV(files) {
+    if (!files || !files.length) {
+        return;
+    }
+
+    const formData = new FormData();
+
+    for (const file of files) {
+        formData.append("files", file);
+    }
+
+    try {
+        showToast("Importing CSV...", "normal");
+
+        const response = await fetch(
+            `${API_URL}/api/tasks/import-csv`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            }
+        );
+
+        const data = await parseResponse(response);
+
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            window.location.href = "index.html";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail ||
+                data.message ||
+                "CSV import failed."
+            );
+        }
+
+        showToast(
+            `CSV imported successfully — ${data.total_imported} tasks added.`,
+            "success"
+        );
+
+        // Refresh dashboard tasks
+        await loadTasks();
+
+    } catch (error) {
+        console.error("CSV import failed:", error);
+
+        showToast(
+            error.message || "CSV import failed.",
+            "error"
+        );
+    }
+}
+
+
 
 // ============================================================
 // STATISTICS
@@ -2369,6 +2433,35 @@ document.addEventListener(
                 openTaskModal
             );
 
+
+        // ----------------------------------------------------
+        // IMPORT CSV
+        // ----------------------------------------------------
+
+        $("import-csv-button")
+            ?.addEventListener(
+                "click",
+                () => {
+                    $("csv-file-input")?.click();
+                }
+            );
+
+        $("csv-file-input")
+            ?.addEventListener(
+                "change",
+                async event => {
+                    const files = event.target.files;
+
+                    if (!files || !files.length) {
+                        return;
+                    }
+
+                    await importCSV(files);
+
+                    // Allow selecting the same file again
+                    event.target.value = "";
+                }
+            );    
 
         // ----------------------------------------------------
         // CLOSE MODAL
