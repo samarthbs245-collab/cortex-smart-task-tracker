@@ -3,7 +3,7 @@
 // ============================================================
 
 const API_URL =
-"http://127.0.0.1:8000";
+"https://cortex-rgzd.onrender.com";
 
 const $ =
 (id) => document.getElementById(id);

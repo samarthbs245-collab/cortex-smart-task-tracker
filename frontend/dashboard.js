@@ -2,7 +2,7 @@
 // CORTEX DASHBOARD ENGINE
 // ============================================================
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://cortex-rgzd.onrender.com";
 
 const token = localStorage.getItem("access_token");
 
@@ -225,6 +225,7 @@ function priorityBadge(priority) {
 // ============================================================
 
 async function loadProfile() {
+
     currentUser = await api("/api/auth/me");
 
     const firstName =
@@ -246,14 +247,48 @@ async function loadProfile() {
             .charAt(0)
             .toUpperCase();
 
-    $("sidebar-avatar").textContent = initial;
-    $("top-avatar").textContent = initial;
+    $("sidebar-avatar").textContent =
+        initial;
 
-    applyTheme(
+    $("top-avatar").textContent =
+        initial;
+
+
+    // PROFILE PAGE
+
+    $("profile-avatar").textContent =
+        initial;
+
+    $("profile-name").textContent =
+        currentUser.name;
+
+    $("profile-email").textContent =
+        currentUser.email;
+
+    $("profile-name-detail").textContent =
+        currentUser.name;
+
+    $("profile-email-detail").textContent =
+        currentUser.email;
+
+
+    const currentTheme =
         currentUser.theme ||
         localStorage.getItem("cortex_theme") ||
-        "dark"
-    );
+        "dark";
+
+    $("profile-theme").textContent =
+        currentTheme === "light"
+            ? "Light"
+            : "Dark";
+
+    $("profile-theme-side").textContent =
+        currentTheme === "light"
+            ? "Light"
+            : "Dark";
+
+
+    applyTheme(currentTheme);
 }
 
 
@@ -1833,13 +1868,71 @@ async function openTaskAI(id) {
 // AI CHAT
 // ============================================================
 
+function formatAIResponse(text) {
+
+    if (!text) {
+        return "";
+    }
+
+    let html = escapeHTML(text.trim());
+
+    // Bold: **text**
+    html = html.replace(
+        /\*\*(.*?)\*\*/g,
+        "<strong>$1</strong>"
+    );
+
+    // Inline code: `code`
+    html = html.replace(
+        /`([^`]+)`/g,
+        "<code>$1</code>"
+    );
+
+    // Headings
+    html = html.replace(
+        /^### (.*?)$/gm,
+        "<h4>$1</h4>"
+    );
+
+    html = html.replace(
+        /^## (.*?)$/gm,
+        "<h3>$1</h3>"
+    );
+
+    // Bullet points
+    html = html.replace(
+        /^[-•]\s+(.*?)$/gm,
+        '<div class="ai-list-item"><span>•</span><div>$1</div></div>'
+    );
+
+    // Numbered points
+    html = html.replace(
+        /^(\d+)\.\s+(.*?)$/gm,
+        '<div class="ai-number-item"><span>$1.</span><div>$2</div></div>'
+    );
+
+    // Paragraph spacing
+    html = html.replace(
+        /\n{2,}/g,
+        '<div class="ai-response-gap"></div>'
+    );
+
+    // Line breaks
+    html = html.replace(
+        /\n/g,
+        "<br>"
+    );
+
+    return html;
+}
+
+
 function appendAIMessage(
     text,
     type = "assistant"
 ) {
 
-    const root =
-        $("ai-messages");
+    const root = $("ai-messages");
 
     if (!root) {
         return null;
@@ -1855,17 +1948,47 @@ function appendAIMessage(
                 : "assistant"
         }`;
 
+    const avatar =
+        type === "user"
+            ? (
+                currentUser?.name
+                    ?.charAt(0)
+                    ?.toUpperCase() || "U"
+            )
+            : "✦";
+
     wrapper.innerHTML = `
+
         <div class="message-avatar">
-            ${
-                type === "user"
-                    ? "●"
-                    : "✦"
-            }
+            ${avatar}
         </div>
 
-        <div class="message-bubble">
-            <p>${escapeHTML(text)}</p>
+        <div class="message-content">
+
+            <div class="message-meta">
+
+                <span class="message-name">
+                    ${
+                        type === "user"
+                            ? "You"
+                            : "CORTEX"
+                    }
+                </span>
+
+            </div>
+
+            <div class="message-bubble">
+
+                <div class="ai-response">
+                    ${
+                        text
+                            ? formatAIResponse(text)
+                            : ""
+                    }
+                </div>
+
+            </div>
+
         </div>
     `;
 
@@ -1875,7 +1998,7 @@ function appendAIMessage(
         root.scrollHeight;
 
     return wrapper.querySelector(
-        ".message-bubble p"
+        ".ai-response"
     );
 }
 
@@ -1889,16 +2012,42 @@ async function sendAIMessage(message) {
         return;
     }
 
+
+    // USER MESSAGE
+
     appendAIMessage(
         clean,
         "user"
     );
 
+
+    // CORTEX THINKING
+
     const responseTarget =
         appendAIMessage(
-            "CORTEX is thinking...",
+            "",
             "assistant"
         );
+
+
+    if (responseTarget) {
+
+        responseTarget.innerHTML = `
+
+            <div class="cortex-thinking">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+                <em>
+                    CORTEX is thinking
+                </em>
+
+            </div>
+        `;
+    }
+
 
     try {
 
@@ -1907,20 +2056,50 @@ async function sendAIMessage(message) {
                 "/api/ai/assistant",
                 {
                     method: "POST",
+
                     body: JSON.stringify({
                         message: clean,
                     }),
                 }
             );
 
-        responseTarget.textContent =
+
+        const answer =
             result.answer ||
             "I don't have a useful answer yet.";
 
+
+        if (responseTarget) {
+
+            responseTarget.innerHTML =
+                formatAIResponse(answer);
+
+        }
+
+
     } catch (error) {
 
-        responseTarget.textContent =
-            error.message;
+        if (responseTarget) {
+
+            responseTarget.innerHTML = `
+                <span class="ai-error">
+                    ${escapeHTML(error.message)}
+                </span>
+            `;
+
+        }
+
+    }
+
+
+    const root =
+        $("ai-messages");
+
+    if (root) {
+
+        root.scrollTop =
+            root.scrollHeight;
+
     }
 }
 
@@ -1946,6 +2125,7 @@ function runQuickAI(action) {
         prompts[action] || action
     );
 }
+
 
 
 // ============================================================
@@ -2100,6 +2280,17 @@ document.addEventListener(
                 );
             });
 
+        // ----------------------------------------------------
+        // TOP PROFILE AVATAR
+        // ----------------------------------------------------
+
+        $("top-avatar")
+            ?.addEventListener(
+                "click",
+                () => {
+                    switchView("profile");
+                }
+            );
 
         // ----------------------------------------------------
         // THEME
