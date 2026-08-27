@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -243,3 +244,74 @@ def security_info():
         "secrets": "Environment variables",
         "rate_limiting": "Enabled",
     }
+
+# ============================================================
+# CUSTOM OPENAPI — CSV FILE UPLOAD FOR SWAGGER
+# ============================================================
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    try:
+        request_body = (
+            openapi_schema["paths"]
+            ["/api/tasks/import-csv"]
+            ["post"]
+            ["requestBody"]
+            ["content"]
+            ["multipart/form-data"]
+            ["schema"]
+        )
+
+        # Resolve schema reference if FastAPI generated one
+        if "$ref" in request_body:
+            ref_name = request_body["$ref"].split("/")[-1]
+
+            request_body = (
+                openapi_schema["components"]
+                ["schemas"]
+                [ref_name]
+            )
+
+        files_schema = (
+            request_body
+            .get("properties", {})
+            .get("files")
+        )
+
+        if files_schema:
+            files_schema["type"] = "array"
+            files_schema["items"] = {
+                "type": "string",
+                "format": "binary",
+            }
+
+            # Remove newer schema metadata that can
+            # make Swagger render a text field.
+            files_schema.pop(
+                "contentMediaType",
+                None,
+            )
+
+            files_schema.pop(
+                "contentEncoding",
+                None,
+            )
+
+    except (KeyError, TypeError):
+        pass
+
+    app.openapi_schema = openapi_schema
+
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi

@@ -1,6 +1,13 @@
 from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from sqlalchemy import or_, case
 from sqlalchemy.orm import Session
 
@@ -17,6 +24,7 @@ from app.schemas.task import (
     TaskUpdate,
 )
 from app.services.auth_dependency import get_current_user
+from app.services.csv_import import import_tasks_from_csv
 
 
 # ============================================================
@@ -395,6 +403,84 @@ def get_tasks(
 
     return query.all()
 
+
+# ============================================================
+# BULK CSV IMPORT
+# ============================================================
+
+@router.post("/import-csv")
+def import_csv_files(
+    files: list[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Import tasks from one or more CSV files.
+
+    Each CSV is processed independently.
+    Messy rows are cleaned or skipped by the CSV import service.
+    """
+
+    total_imported = 0
+    total_skipped = 0
+    total_cleaned = 0
+
+    file_results = []
+
+    for file in files:
+
+        # Only accept CSV files.
+        if not file.filename.lower().endswith(".csv"):
+            file_results.append(
+                {
+                    "filename": file.filename,
+                    "imported_count": 0,
+                    "skipped_count": 0,
+                    "cleaned_count": 0,
+                    "error": "Only CSV files are allowed.",
+                }
+            )
+            continue
+
+        try:
+            result = import_tasks_from_csv(
+                file=file,
+                db=db,
+                user_id=current_user.id,
+            )
+
+            total_imported += result["imported_count"]
+            total_skipped += result["skipped_count"]
+            total_cleaned += result["cleaned_count"]
+
+            file_results.append(
+                {
+                    "filename": file.filename,
+                    **result,
+                }
+            )
+
+        except Exception as exc:
+            db.rollback()
+
+            file_results.append(
+                {
+                    "filename": file.filename,
+                    "imported_count": 0,
+                    "skipped_count": 0,
+                    "cleaned_count": 0,
+                    "error": str(exc),
+                }
+            )
+
+    return {
+        "message": "CSV import completed.",
+        "total_files": len(files),
+        "total_imported": total_imported,
+        "total_skipped": total_skipped,
+        "total_cleaned": total_cleaned,
+        "files": file_results,
+    }
 
 # ============================================================
 # DASHBOARD STATISTICS
