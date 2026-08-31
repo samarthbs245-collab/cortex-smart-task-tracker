@@ -35,7 +35,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 MODEL = os.getenv(
     "GEMINI_MODEL",
-    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash-lite",
 )
 
 
