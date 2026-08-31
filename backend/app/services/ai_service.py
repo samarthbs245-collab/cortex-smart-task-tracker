@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
+from sqlalchemy import exc
 
 
 # ============================================================
@@ -438,7 +439,8 @@ Do not invent information.
 
             return result.text.strip()
 
-        except Exception:
+        except Exception as exc:
+            print("GEMINI ERROR:", repr(exc))
 
             return (
                 "I'm having a little trouble connecting "
