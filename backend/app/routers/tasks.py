@@ -794,6 +794,59 @@ def update_task(
 
     return task
 
+# ============================================================
+# CLEAR ALL TASKS
+# ============================================================
+
+@router.delete("/clear-all")
+def clear_all_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    task_ids = [
+        task.id
+        for task in (
+            db.query(Task.id)
+            .filter(
+                Task.user_id == current_user.id
+            )
+            .all()
+        )
+    ]
+
+    if not task_ids:
+        return {
+            "message": "No tasks to clear.",
+            "deleted_count": 0,
+        }
+
+    # Delete subtasks first
+    db.query(Subtask).filter(
+        Subtask.task_id.in_(task_ids)
+    ).delete(
+        synchronize_session=False
+    )
+
+    # Delete all tasks belonging to the current user
+    deleted_count = (
+        db.query(Task)
+        .filter(
+            Task.user_id == current_user.id
+        )
+        .delete(
+            synchronize_session=False
+        )
+    )
+
+    db.commit()
+
+    return {
+        "message": "All tasks cleared successfully.",
+        "deleted_count": deleted_count,
+    }
+
 
 # ============================================================
 # DELETE TASK
@@ -811,7 +864,6 @@ def delete_task(
         get_current_user
     ),
 ):
-
     task = _get_owned_task(
         task_id,
         db,
@@ -824,7 +876,6 @@ def delete_task(
     return {
         "message": "Task deleted successfully."
     }
-
 
 # ============================================================
 # ADD SUBTASK
