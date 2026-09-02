@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -54,7 +55,56 @@ class CortexAI:
             if key
             else None
         )
+    # ========================================================
+    # GEMINI REQUEST WITH RETRY
+    # ========================================================
 
+    def _generate(self, prompt: str):
+        """
+        Send a request to Gemini with automatic retry
+        for temporary 503 / unavailable errors.
+        """
+
+        last_error = None
+
+        for attempt in range(3):
+
+            try:
+                return self.client.models.generate_content(
+                    model=MODEL,
+                    contents=prompt,
+                )
+
+            except Exception as exc:
+
+                last_error = exc
+                error_text = repr(exc).lower()
+
+                temporary_error = (
+                    "503" in error_text
+                    or "unavailable" in error_text
+                    or "high demand" in error_text
+                    or "overloaded" in error_text
+                )
+
+                # Do not retry permanent errors
+                if not temporary_error:
+                    raise
+
+                print(
+                    f"GEMINI TEMPORARY ERROR "
+                    f"(attempt {attempt + 1}/3):",
+                    repr(exc),
+                )
+
+                # No need to sleep after final attempt
+                if attempt < 2:
+                    time.sleep(1.5 * (2 ** attempt))
+
+        raise last_error    
+
+
+           
     # ========================================================
     # PARSE JSON FROM AI
     # ========================================================
@@ -187,10 +237,7 @@ Description:
 
         try:
 
-            result = self.client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-            )
+            result = self._generate(prompt)
 
             parsed = self._json(
                 result.text
@@ -263,22 +310,28 @@ Description:
 
         is_simple = message.lower().strip() in simple_messages
 
-        # ----------------------------------------------------
-        # SMALL PROMPT FOR SIMPLE MESSAGES
-        # ----------------------------------------------------
-
         if is_simple:
+            quick_replies = {
+                "hi": "Hey! How can I help you today?",
+                "hello": "Hello! How can I help you today?",
+                "hey": "Hey! What can I help you with?",
+                "hii": "Hey! How can I help?",
+                "hiii": "Hey! How can I help?",
+                "good morning": "Good morning! Ready to get things done?",
+                "good afternoon": "Good afternoon! How can I help?",
+                "good evening": "Good evening! What can I help you with?",
+                "how are you": "I'm doing great! What are we working on?",
+                "how are you?": "I'm doing great! What are we working on?",
+                "thanks": "You're welcome!",
+                "thank you": "You're welcome!",
+                "thank you!": "You're welcome!",
+            }
 
-            prompt = f"""
-You are CORTEX, a friendly AI productivity assistant.
+            return quick_replies.get(
+                message.lower().strip(),
+                "Hey! How can I help?"
+            )
 
-Respond naturally, warmly, and briefly.
-
-Do not mention tasks unless the user asks about them.
-
-User:
-{message}
-"""
 
         # ----------------------------------------------------
         # TASK-AWARE PROMPT
@@ -425,10 +478,7 @@ Do not invent information.
 
         try:
 
-            result = self.client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-            )
+            result = self._generate(prompt)
 
             if not result.text:
 
