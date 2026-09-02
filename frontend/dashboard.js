@@ -1639,6 +1639,65 @@ async function deleteTask(id) {
     await loadTasks();
 }
 
+// ============================================================
+// CLEAR ALL TASKS
+// ============================================================
+
+async function clearAllTasks() {
+    if (!tasks.length) {
+        showToast(
+            "There are no tasks to clear.",
+            "normal"
+        );
+        return;
+    }
+
+    const confirmed = await showConfirmModal(
+        "Clear all tasks",
+        `Are you sure you want to delete all ${tasks.length} tasks permanently?`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await api(
+            "/api/tasks/clear-all",
+            {
+                method: "DELETE",
+            }
+        );
+
+        tasks = [];
+
+        renderTaskList();
+        renderFocusTasks();
+        renderRecentTasks();
+        renderBoard();
+        renderCalendar();
+
+        showToast(
+            "All tasks cleared successfully.",
+            "success"
+        );
+
+        await loadStats();
+        await loadReminders();
+
+    } catch (error) {
+        console.error(
+            "Clear all tasks failed:",
+            error
+        );
+
+        showToast(
+            error.message ||
+            "Unable to clear all tasks.",
+            "error"
+        );
+    }
+}
 
 // ============================================================
 // TASK ACTIONS
@@ -2445,6 +2504,13 @@ document.addEventListener(
                     $("csv-file-input")?.click();
                 }
             );
+
+        $("clear-all-tasks-button")
+            ?.addEventListener(
+                "click",
+                clearAllTasks
+            );
+    
         $("import-csv-modal-button")
             ?.addEventListener(
                 "click",
