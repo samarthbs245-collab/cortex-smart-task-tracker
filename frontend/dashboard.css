@@ -3417,3 +3417,497 @@ body.light-theme .stat-card {
 .ai-error {
     color: #fca5a5;
 }
+
+/* ============================================================
+   CORTEX CONFIRMATION MODAL
+   ============================================================ */
+
+.cortex-confirm-modal {
+    position: fixed;
+    inset: 0;
+
+    display: grid;
+    place-items: center;
+
+    padding: 20px;
+
+    z-index: 9999;
+
+    animation:
+        cortexConfirmFadeIn .22s ease;
+}
+
+
+/* BACKDROP */
+
+.cortex-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background:
+        rgba(2, 5, 14, .76);
+
+    backdrop-filter:
+        blur(10px);
+}
+
+
+/* CARD */
+
+.cortex-confirm-card {
+    position: relative;
+
+    width: min(430px, calc(100vw - 32px));
+
+    padding: 30px 30px 22px;
+
+    border:
+        1px solid rgba(139, 92, 246, .22);
+
+    border-radius: 22px;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(139, 92, 246, .13),
+            transparent 38%
+        ),
+        linear-gradient(
+            150deg,
+            rgba(24, 31, 54, .98),
+            rgba(8, 13, 27, .99)
+        );
+
+    box-shadow:
+        0 35px 100px rgba(0,0,0,.62),
+        0 0 70px rgba(99,102,241,.08);
+
+    z-index: 1;
+
+    overflow: hidden;
+
+    animation:
+        cortexConfirmScaleIn .25s cubic-bezier(.2,.8,.2,1);
+}
+
+
+/* TOP PURPLE GLOW */
+
+.cortex-confirm-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: -90px;
+    left: 50%;
+
+    width: 210px;
+    height: 210px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background:
+        rgba(139,92,246,.13);
+
+    filter: blur(45px);
+
+    pointer-events: none;
+}
+
+
+/* CLOSE BUTTON */
+
+.cortex-confirm-close {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    border:
+        1px solid rgba(148,163,184,.10);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.025);
+
+    color: #8997aa;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+.cortex-confirm-close:hover {
+    background:
+        rgba(255,255,255,.07);
+
+    color: white;
+
+    transform: rotate(4deg);
+}
+
+
+/* ICON */
+
+.cortex-confirm-icon-wrap {
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+
+    margin-top: 5px;
+    margin-bottom: 22px;
+}
+
+.cortex-confirm-icon {
+    width: 76px;
+    height: 76px;
+
+    display: grid;
+    place-items: center;
+
+    border:
+        1px solid rgba(139,92,246,.75);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(139,92,246,.17),
+            rgba(99,102,241,.05)
+        );
+
+    color: #a78bfa;
+
+    box-shadow:
+        0 0 0 8px rgba(139,92,246,.035),
+        0 0 35px rgba(139,92,246,.18);
+}
+
+.cortex-confirm-icon svg {
+    width: 31px;
+    height: 31px;
+}
+
+
+/* CONTENT */
+
+.cortex-confirm-content {
+    position: relative;
+
+    text-align: center;
+}
+
+.cortex-confirm-content h2 {
+    margin: 0;
+
+    color: #f8fafc;
+
+    font-family:
+        "Space Grotesk",
+        sans-serif;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    letter-spacing: -.5px;
+}
+
+.cortex-confirm-message {
+    margin: 10px auto 0;
+
+    max-width: 350px;
+
+    color: #8d9bb0;
+
+    font-size: 11px;
+
+    line-height: 1.7;
+}
+
+.cortex-confirm-message strong {
+    color: #b9a9ff;
+
+    font-weight: 700;
+}
+
+
+/* WARNING BOX */
+
+.cortex-confirm-warning {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 11px;
+
+    margin-top: 20px;
+
+    padding: 13px;
+
+    border:
+        1px solid rgba(139,92,246,.12);
+
+    border-radius: 13px;
+
+    background:
+        rgba(139,92,246,.045);
+
+    text-align: left;
+}
+
+.cortex-warning-icon {
+    width: 27px;
+    height: 27px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 auto;
+
+    border-radius: 8px;
+
+    background:
+        rgba(139,92,246,.12);
+
+    color: #b6a6ff;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+.cortex-confirm-warning strong,
+.cortex-confirm-warning span {
+    display: block;
+}
+
+.cortex-confirm-warning strong {
+    color: #c5bbeb;
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+.cortex-confirm-warning span {
+    margin-top: 4px;
+
+    color: #697990;
+
+    font-size: 9px;
+
+    line-height: 1.55;
+}
+
+
+/* BUTTONS */
+
+.cortex-confirm-actions {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 9px;
+
+    margin-top: 21px;
+}
+
+.cortex-confirm-cancel,
+.cortex-confirm-delete {
+    min-height: 44px;
+
+    border-radius: 11px;
+
+    font-size: 11px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+}
+
+
+/* CANCEL */
+
+.cortex-confirm-cancel {
+    border:
+        1px solid rgba(148,163,184,.13);
+
+    background:
+        rgba(255,255,255,.035);
+
+    color: #c1cbd8;
+}
+
+.cortex-confirm-cancel:hover {
+    background:
+        rgba(255,255,255,.07);
+
+    transform: translateY(-1px);
+}
+
+
+/* DELETE */
+
+.cortex-confirm-delete {
+    border: 0;
+
+    background:
+        linear-gradient(
+            135deg,
+            #8b5cf6,
+            #6366f1
+        );
+
+    color: white;
+
+    box-shadow:
+        0 10px 28px rgba(99,102,241,.25);
+}
+
+.cortex-confirm-delete:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 14px 34px rgba(99,102,241,.38);
+}
+
+.cortex-confirm-delete:active,
+.cortex-confirm-cancel:active {
+    transform: translateY(0);
+}
+
+
+/* FOOTER */
+
+.cortex-confirm-footer {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    margin-top: 17px;
+
+    color: #58677d;
+
+    font-size: 8px;
+
+    text-align: center;
+}
+
+.cortex-confirm-footer span {
+    color: #7c6bd9;
+
+    font-size: 8px;
+}
+
+
+/* ANIMATIONS */
+
+@keyframes cortexConfirmFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes cortexConfirmScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(.94) translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.cortex-confirm-modal.closing {
+    animation:
+        cortexConfirmFadeOut .18s ease forwards;
+}
+
+.cortex-confirm-modal.closing
+.cortex-confirm-card {
+    animation:
+        cortexConfirmScaleOut .18s ease forwards;
+}
+
+@keyframes cortexConfirmFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes cortexConfirmScaleOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(.96);
+    }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 520px) {
+
+    .cortex-confirm-card {
+        padding:
+            27px 20px 19px;
+    }
+
+    .cortex-confirm-icon {
+        width: 68px;
+        height: 68px;
+    }
+
+    .cortex-confirm-content h2 {
+        font-size: 21px;
+    }
+
+    .cortex-confirm-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .cortex-confirm-delete {
+        order: -1;
+    }
+}

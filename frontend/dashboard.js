@@ -1608,6 +1608,209 @@ async function setTaskStatus(id, status) {
     }
 }
 
+// ============================================================
+// CORTEX CONFIRMATION MODAL
+// ============================================================
+
+function showConfirmModal(
+    title,
+    message,
+    {
+        count = null,
+        confirmText = "Delete",
+    } = {}
+) {
+    return new Promise(resolve => {
+
+        // Remove any existing confirmation modal
+        document
+            .querySelector(".cortex-confirm-modal")
+            ?.remove();
+
+        const modal = document.createElement("div");
+
+        modal.className = "cortex-confirm-modal";
+
+        modal.innerHTML = `
+            <div class="cortex-confirm-backdrop"></div>
+
+            <div
+                class="cortex-confirm-card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cortex-confirm-title"
+            >
+
+                <button
+                    class="cortex-confirm-close"
+                    type="button"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+                <div class="cortex-confirm-icon-wrap">
+                    <div class="cortex-confirm-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M9 3h6m-9 3h12M10 11v6m4-6v6M5 6l1 14h12l1-14M9 6V4h6v2"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="cortex-confirm-content">
+
+                    <h2 id="cortex-confirm-title">
+                        ${escapeHTML(title)}
+                    </h2>
+
+                    <p class="cortex-confirm-message">
+                        ${
+                            count !== null
+                                ? `You are about to permanently delete all <strong>${count}</strong> tasks.`
+                                : escapeHTML(message)
+                        }
+                    </p>
+
+                    ${
+                        count !== null
+                            ? `
+                                <div class="cortex-confirm-warning">
+                                    <div class="cortex-warning-icon">
+                                        !
+                                    </div>
+
+                                    <div>
+                                        <strong>
+                                            This action cannot be undone
+                                        </strong>
+
+                                        <span>
+                                            All ${count} tasks and their
+                                            related data will be permanently removed.
+                                        </span>
+                                    </div>
+                                </div>
+                            `
+                            : `
+                                <div class="cortex-confirm-warning">
+                                    <div class="cortex-warning-icon">
+                                        !
+                                    </div>
+
+                                    <div>
+                                        <strong>
+                                            Permanent deletion
+                                        </strong>
+
+                                        <span>
+                                            This task and its related data
+                                            will be permanently removed.
+                                        </span>
+                                    </div>
+                                </div>
+                            `
+                    }
+
+                </div>
+
+                <div class="cortex-confirm-actions">
+
+                    <button
+                        class="cortex-confirm-cancel"
+                        type="button"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        class="cortex-confirm-delete"
+                        type="button"
+                    >
+                        ${escapeHTML(confirmText)}
+                    </button>
+
+                </div>
+
+                <div class="cortex-confirm-footer">
+                    <span>◉</span>
+                    Your data is important. Please double-check before confirming.
+                </div>
+
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const close = (result) => {
+            modal.classList.add("closing");
+
+            setTimeout(() => {
+                modal.remove();
+                resolve(result);
+            }, 180);
+        };
+
+        modal
+            .querySelector(".cortex-confirm-cancel")
+            .addEventListener(
+                "click",
+                () => close(false)
+            );
+
+        modal
+            .querySelector(".cortex-confirm-close")
+            .addEventListener(
+                "click",
+                () => close(false)
+            );
+
+        modal
+            .querySelector(".cortex-confirm-backdrop")
+            .addEventListener(
+                "click",
+                () => close(false)
+            );
+
+        modal
+            .querySelector(".cortex-confirm-delete")
+            .addEventListener(
+                "click",
+                () => close(true)
+            );
+
+        // ESC = Cancel
+        const handleEscape = event => {
+            if (event.key === "Escape") {
+                document.removeEventListener(
+                    "keydown",
+                    handleEscape
+                );
+
+                close(false);
+            }
+        };
+
+        document.addEventListener(
+            "keydown",
+            handleEscape
+        );
+
+        // Enter = Confirm
+        modal
+            .querySelector(".cortex-confirm-delete")
+            .focus();
+    });
+}
 
 // ============================================================
 
@@ -1654,7 +1857,11 @@ async function clearAllTasks() {
 
     const confirmed = await showConfirmModal(
         "Clear all tasks",
-        `Are you sure you want to delete all ${tasks.length} tasks permanently?`
+        `You are about to permanently delete all ${tasks.length} tasks.`,
+        {
+            count: tasks.length,
+            confirmText: "Delete all tasks"
+        }
     );
 
     if (!confirmed) {
