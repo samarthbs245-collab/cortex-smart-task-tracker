@@ -8,8 +8,8 @@ from fastapi import (
     Query,
     UploadFile,
 )
-from sqlalchemy import or_, case
-from sqlalchemy.orm import Session
+from sqlalchemy import or_, case, func
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models.subtask import Subtask
@@ -262,11 +262,13 @@ def get_tasks(
 
     query = (
         db.query(Task)
+        .options(
+            selectinload(Task.subtasks)
+        )
         .filter(
             Task.user_id == current_user.id
         )
     )
-
     # ========================================================
     # SEARCH
     # ========================================================
@@ -496,17 +498,6 @@ def get_stats(
         get_current_user
     ),
 ):
-
-    tasks = (
-        db.query(Task)
-        .filter(
-            Task.user_id == current_user.id
-        )
-        .all()
-    )
-
-    total = len(tasks)
-
     today = date.today()
 
     start_of_today = datetime.combine(
@@ -521,46 +512,93 @@ def get_stats(
 
     now = datetime.now()
 
-    completed = sum(
-        task.status == "done"
-        for task in tasks
-    )
+    stats = (
+        db.query(
+            func.count(Task.id).label("total"),
 
-    in_progress = sum(
-        task.status == "in_progress"
-        for task in tasks
-    )
+            func.sum(
+                case(
+                    (Task.status == "done", 1),
+                    else_=0,
+                )
+            ).label("completed"),
 
-    todo = sum(
-        task.status == "todo"
-        for task in tasks
-    )
+            func.sum(
+                case(
+                    (
+                        Task.status == "in_progress",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("in_progress"),
 
-    overdue = sum(
-        bool(
-            task.due_date
-            and task.due_date < now
-            and task.status != "done"
+            func.sum(
+                case(
+                    (Task.status == "todo", 1),
+                    else_=0,
+                )
+            ).label("todo"),
+
+            func.sum(
+                case(
+                    (
+                        (Task.due_date.isnot(None))
+                        & (Task.due_date < now)
+                        & (Task.status != "done"),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("overdue"),
+
+            func.sum(
+                case(
+                    (
+                        (Task.due_date.isnot(None))
+                        & (
+                            Task.due_date
+                            >= start_of_today
+                        )
+                        & (
+                            Task.due_date
+                            < start_of_tomorrow
+                        )
+                        & (Task.status != "done"),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("due_today"),
+
+            func.sum(
+                case(
+                    (
+                        (Task.priority == "urgent")
+                        & (Task.status != "done"),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("urgent"),
         )
-        for task in tasks
-    )
-
-    due_today = sum(
-        bool(
-            task.due_date
-            and start_of_today
-            <= task.due_date
-            < start_of_tomorrow
-            and task.status != "done"
+        .filter(
+            Task.user_id == current_user.id
         )
-        for task in tasks
+        .one()
     )
 
-    urgent = sum(
-        task.priority == "urgent"
-        and task.status != "done"
-        for task in tasks
+    total = int(stats.total or 0)
+    completed = int(stats.completed or 0)
+    in_progress = int(
+        stats.in_progress or 0
     )
+    todo = int(stats.todo or 0)
+    overdue = int(stats.overdue or 0)
+    due_today = int(
+        stats.due_today or 0
+    )
+    urgent = int(stats.urgent or 0)
 
     completion_rate = (
         round(
@@ -604,7 +642,12 @@ def get_reminders(
     )
 
     tasks = (
-        db.query(Task)
+        db.query(
+            Task.id,
+            Task.title,
+            Task.due_date,
+            Task.priority,
+        )
         .filter(
             Task.user_id == current_user.id,
             Task.status != "done",

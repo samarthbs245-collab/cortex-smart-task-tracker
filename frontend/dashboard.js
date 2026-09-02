@@ -2,7 +2,7 @@
 // CORTEX DASHBOARD ENGINE
 // ============================================================
 
-const API_URL = "https://cortex-rgzd.onrender.com";
+const API_URL = "https://your-cortex-backend.onrender.com";
 
 const token = localStorage.getItem("access_token");
 
@@ -425,8 +425,13 @@ async function loadTasks() {
     renderBoard();
     renderCalendar();
 
-    await loadStats();
-    await loadReminders();
+}
+
+async function refreshDashboard() {
+    await Promise.all([
+        loadTasks(),
+        loadStats(),
+    ]);
 }
 
 // ============================================================
@@ -480,7 +485,7 @@ async function importCSV(files) {
         );
 
         // Refresh dashboard tasks
-        await loadTasks();
+        await refreshDashboard();
 
     } catch (error) {
         console.error("CSV import failed:", error);
@@ -732,7 +737,7 @@ function renderTaskList() {
     root.innerHTML =
         tasks.map(taskCard).join("");
 
-    attachTaskActions();
+    attachTaskActions(root);
 }
 
 
@@ -839,7 +844,7 @@ function renderFocusTasks() {
             })
             .join("");
 
-    attachTaskActions();
+    attachTaskActions(root);
 }
 
 
@@ -1114,7 +1119,7 @@ function setupBoardDrop(
                 "success"
             );
 
-            await loadTasks();
+            await refreshDashboard();
 
         } catch (error) {
             showToast(
@@ -1464,7 +1469,7 @@ async function createTask(event) {
             "success"
         );
 
-        await loadTasks();
+        await refreshDashboard();
 
     } catch (error) {
         message.textContent =
@@ -1514,7 +1519,7 @@ async function completeTask(id) {
             "success"
         );
 
-        await loadTasks();
+        await refreshDashboard();
 
     } catch (error) {
 
@@ -1596,7 +1601,7 @@ async function setTaskStatus(id, status) {
             );
         }
 
-        await loadTasks();
+        await refreshDashboard();
 
     } catch (error) {
 
@@ -1839,7 +1844,7 @@ async function deleteTask(id) {
         "success"
     );
 
-    await loadTasks();
+    await refreshDashboard();
 }
 
 // ============================================================
@@ -1910,12 +1915,11 @@ async function clearAllTasks() {
 // TASK ACTIONS
 // ============================================================
 
-function attachTaskActions() {
+function attachTaskActions(root) {
 
-    document
-        .querySelectorAll(
-            "[data-task-action]"
-        )
+    root?.querySelectorAll(
+        "[data-task-action]"
+    )
         .forEach(button => {
 
             button.addEventListener(
@@ -2597,8 +2601,7 @@ document.addEventListener(
 
                 button.addEventListener(
                     "click",
-                    () => {
-
+                    async () => {
                         switchView(
                             button.dataset.view
                         );
@@ -2606,6 +2609,12 @@ document.addEventListener(
                         toggleMobileSidebar(
                             false
                         );
+
+                        if (
+                            button.dataset.view === "profile"
+                        ) {
+                            await loadProfile();
+                        }
                     }
                 );
             });
@@ -2782,10 +2791,21 @@ document.addEventListener(
         // FILTERS
         // ----------------------------------------------------
 
+        let searchTimer;
+
         $("task-search")
             ?.addEventListener(
                 "input",
-                loadTasks
+                () => {
+                    clearTimeout(searchTimer);
+
+                    searchTimer = setTimeout(
+                        () => {
+                            loadTasks();
+                        },
+                        300
+                    );
+                }
             );
 
         [
@@ -2841,12 +2861,11 @@ document.addEventListener(
         $("notification-button")
             ?.addEventListener(
                 "click",
-                () => {
-
+                async () => {
                     $("notification-panel")
-                        ?.classList.toggle(
-                            "hidden"
-                        );
+                        ?.classList.toggle("hidden");
+
+                    await loadReminders();
                 }
             );
 
@@ -3046,8 +3065,10 @@ document.addEventListener(
 
         try {
 
-            await loadProfile();
-            await loadTasks();
+             await Promise.all([
+                loadTasks(),
+                loadStats(),
+            ]);
 
         } catch (error) {
 
