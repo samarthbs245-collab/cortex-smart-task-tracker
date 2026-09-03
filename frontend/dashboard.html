@@ -1312,179 +1312,281 @@
                 </div>
 
             </section>
-                <!-- =================================================
-                    PROFILE VIEW
-                ================================================== -->
+<!-- =================================================
+    PROFILE VIEW — AI WORKSPACE
+================================================== -->
 
-                <section
-                    id="profile-view"
-                    class="page-view"
+<section
+    id="profile-view"
+    class="page-view"
+>
+
+    <div class="view-header">
+
+        <div>
+
+            <span class="panel-kicker">
+                CORTEX AI
+            </span>
+
+            <h2>
+                Workspace Identity
+            </h2>
+
+            <p>
+                Your AI-powered productivity workspace
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="profile-layout">
+
+        <!-- =================================================
+             IDENTITY CARD
+        ================================================== -->
+
+        <section class="workspace-panel profile-card">
+
+            <div class="profile-card-header">
+
+                <div id="profile-avatar" class="profile-avatar">
+                    <img
+                        src="assets/cortex-avatar-ring.svg"
+                        alt=""
+                        aria-hidden="true"
+                    >
+                    <span>C</span>
+                </div>
+
+                <div>
+
+                    <span class="panel-kicker">
+                        AI WORKSPACE MEMBER
+                    </span>
+
+                    <h3 id="profile-name">
+                        User
+                    </h3>
+
+                    <p id="profile-email">
+                        user@example.com
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="profile-brain">
+                <img
+                    src="assets/cortex-brain.svg"
+                    alt=""
+                    aria-hidden="true"
                 >
+            </div>
 
-                    <div class="view-header">
+            <div class="profile-details">
 
-                        <div>
+                <div class="profile-detail">
 
-                            <span class="panel-kicker">
-                                 ACCOUNT
-                            </span>
+                    <span>
+                        FULL NAME
+                    </span>
 
-                            <h2>
-                                My Profile
-                            </h2>
+                    <strong id="profile-name-detail">
+                        —
+                    </strong>
 
-                            <p>
-                                Manage your CORTEX account information
-                                and workspace preferences.
-                            </p>
-
-                        </div>
-
-                    </div>
+                </div>
 
 
-                    <div class="profile-layout">
+                <div class="profile-detail">
 
-                        <!-- PROFILE CARD -->
+                    <span>
+                        EMAIL ADDRESS
+                    </span>
 
-                        <section class="workspace-panel profile-card">
+                    <strong id="profile-email-detail">
+                        —
+                    </strong>
 
-                            <div class="profile-card-header">
-
-                                <div
-                                    id="profile-avatar"
-                                    class="profile-avatar"
-                                >
-                                    C
-                                </div>
-
-                                <div>
-
-                                    <span class="panel-kicker">
-                                        CORTEX USER
-                                    </span>
-
-                                    <h3 id="profile-name">
-                                        User
-                                    </h3>
-
-                                    <p id="profile-email">
-                                        user@example.com
-                                    </p>
-
-                                </div>
-
-                            </div>
+                </div>
 
 
-                            <div class="profile-details">
+                <div class="profile-detail">
 
-                                <div class="profile-detail">
+                    <span>
+                        ACCOUNT STATUS
+                    </span>
 
-                                    <span>
-                                        FULL NAME
-                                    </span>
+                    <strong class="profile-status">
+                        ● Active
+                    </strong>
 
-                                    <strong id="profile-name-detail">
-                                        —
-                                    </strong>
-
-                                </div>
+                </div>
 
 
-                                <div class="profile-detail">
+                <div class="profile-detail">
 
-                                    <span>
-                                        EMAIL ADDRESS
-                                    </span>
+                    <span>
+                        THEME
+                    </span>
 
-                                    <strong id="profile-email-detail">
-                                        —
-                                    </strong>
+                    <strong id="profile-theme">
+                        Dark
+                    </strong>
 
-                                </div>
+                </div>
 
+            </div>
 
-                                <div class="profile-detail">
+        </section>
 
-                                    <span>
-                                        ACCOUNT STATUS
-                                    </span>
+        <!-- =================================================
+            PRODUCTIVITY SNAPSHOT
+        ================================================== -->
 
-                                    <strong class="profile-status">
-                                        ● Active
-                                    </strong>
+        <section class="profile-productivity">
 
-                                </div>
+            <div class="profile-productivity-card">
 
+                <div class="profile-productivity-icon">
+                    ◫
+                </div>
 
-                                <div class="profile-detail">
+                <div>
+                    <span>
+                        TOTAL TASKS
+                    </span>
 
-                                    <span>
-                                        THEME
-                                    </span>
+                    <strong id="profile-stat-total">
+                        0
+                    </strong>
 
-                                    <strong id="profile-theme">
-                                        Dark
-                                    </strong>
+                    <small>
+                        Tasks in your workspace
+                    </small>
+                </div>
 
-                                </div>
-
-                            </div>
-
-                         </section>
-
-
-                        <!-- WORKSPACE INFORMATION -->
-
-                        <section class="workspace-panel profile-info-card">
-
-                            <span class="panel-kicker">
-                                WORKSPACE
-                            </span>
-
-                            <h3>
-                                Your CORTEX workspace
-                            </h3>
-
-                            <p>
-                                Your profile is connected to your
-                                CORTEX workspace. Your tasks, AI
-                                activity and preferences are linked
-                                to this account.
-                            </p>
+            </div>
 
 
-                            <div class="profile-info-row">
+            <div class="profile-productivity-card">
 
-                                <span>
-                                    Account
-                                </span>
+                <div class="profile-productivity-icon">
+                    ✓
+                </div>
 
-                                <strong>
-                                    Active
-                                </strong>
+                <div>
+                    <span>
+                        COMPLETED
+                    </span>
 
-                            </div>
+                    <strong id="profile-stat-completed">
+                        0
+                    </strong>
+
+                    <small>
+                        Successfully finished
+                    </small>
+                </div>
+
+            </div>
 
 
-                            <div class="profile-info-row">
+            <div class="profile-productivity-card">
 
-                                <span>
-                                    Theme
-                                </span>
+                <div class="profile-productivity-icon">
+                    ◌
+                </div>
 
-                                <strong id="profile-theme-side">
-                                    Dark
-                                </strong>
+                <div>
+                    <span>
+                        COMPLETION RATE
+                    </span>
 
-                            </div>
+                    <strong id="profile-stat-rate">
+                        0%
+                    </strong>
 
-                         </section>
+                    <small>
+                        Overall productivity
+                    </small>
+                </div>
 
-                    </div>
+            </div>
 
-                </section>
+        </section>
+
+
+        <!-- =================================================
+             AI WORKSPACE INFORMATION
+        ================================================== -->
+
+        <section class="workspace-panel profile-info-card">
+
+            <span class="panel-kicker">
+                CORTEX AI
+            </span>
+
+            <h3>
+                Your intelligent workspace
+            </h3>
+
+            <p>
+                CORTEX connects your tasks, productivity
+                activity and preferences into one AI-powered
+                workspace.
+            </p>
+
+
+            <div class="profile-info-row">
+
+                <span>
+                    Workspace
+                </span>
+
+                <strong>
+                    Active
+                </strong>
+
+            </div>
+
+
+            <div class="profile-info-row">
+
+                <span>
+                    Account
+                </span>
+
+                <strong>
+                    Active
+                </strong>
+
+            </div>
+
+
+            <div class="profile-info-row">
+
+                <span>
+                    Theme
+                </span>
+
+                <strong id="profile-theme-side">
+                    Dark
+                </strong>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</section>
+
+                
         </main>
 
     </div>

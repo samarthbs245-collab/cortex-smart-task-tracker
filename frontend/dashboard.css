@@ -3010,64 +3010,192 @@ body.light-theme .stat-card {
         drop-shadow(0 0 15px rgba(125, 92, 255, 0.45))
         drop-shadow(0 0 30px rgba(0, 190, 255, 0.30));
 }
+
+
 /* ============================================================
-   PROFILE VIEW
+   PROFILE VIEW — AI WORKSPACE
    ============================================================ */
 
 .profile-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
-    gap: 15px;
+    display: block;
 }
 
-.profile-card,
-.profile-info-card {
-    padding: 24px;
+/* Main identity card */
+.profile-card {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border: 1px solid rgba(139, 92, 246, 0.20);
+    border-radius: 20px;
+
+    background:
+        radial-gradient(
+            circle at 90% 50%,
+            rgba(139, 92, 246, 0.13),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(34, 211, 238, 0.05),
+            transparent 35%
+        ),
+        var(--db-surface);
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.20);
 }
 
+/* Decorative glow */
+.profile-card::after {
+    content: "";
+    position: absolute;
+
+    right: -80px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 260px;
+    height: 260px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(139, 92, 246, 0.10),
+            transparent 68%
+        );
+
+    pointer-events: none;
+}
+
+/* Identity section */
 .profile-card-header {
+    position: relative;
+    z-index: 2;
+
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding-bottom: 22px;
-    border-bottom: 1px solid var(--db-border);
+
+    gap: 20px;
+
+    padding: 0 0 24px;
+
+    border-bottom:
+        1px solid var(--db-border);
 }
 
+/* Futuristic avatar */
 .profile-avatar {
-    width: 72px;
-    height: 72px;
+    position: relative;
+
+    width: 86px;
+    height: 86px;
 
     display: grid;
     place-items: center;
 
     flex: 0 0 auto;
 
-    border-radius: 20px;
+    border-radius: 24px;
 
-    background: linear-gradient(
-        135deg,
-        var(--db-purple),
-        var(--db-indigo),
-        #4f46e5
-    );
+    background:
+        linear-gradient(
+            135deg,
+            var(--db-purple),
+            var(--db-indigo),
+            #4f46e5
+        );
 
     color: white;
 
-    font-family: "Space Grotesk", sans-serif;
+    font-family:
+        "Space Grotesk",
+        sans-serif;
 
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 800;
 
     box-shadow:
-        0 15px 35px rgba(99, 102, 241, 0.25);
+        0 0 0 6px rgba(139, 92, 246, 0.07),
+        0 15px 40px rgba(99, 102, 241, 0.30);
 }
 
+/* Avatar glow ring */
+.profile-avatar::before {
+    content: "";
+
+    position: absolute;
+    inset: -7px;
+
+    border-radius: 28px;
+
+    border:
+        1px solid rgba(139, 92, 246, 0.30);
+
+    box-shadow:
+        0 0 25px rgba(139, 92, 246, 0.15);
+
+    pointer-events: none;
+}
+
+/* Keep avatar artwork and initial contained */
+.profile-avatar img {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.profile-avatar span {
+    position: relative;
+    z-index: 2;
+}
+
+/* CORTEX brain visualization */
+.profile-brain {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    height: 180px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 10px 0 0;
+    overflow: hidden;
+}
+
+.profile-brain img {
+    display: block;
+
+    width: 180px !important;
+    height: 165px !important;
+
+    max-width: 180px !important;
+    max-height: 165px !important;
+
+    object-fit: contain;
+    opacity: 0.95;
+}
+
+/* User information */
 .profile-card-header h3 {
-    margin: 6px 0 4px;
+    margin: 7px 0 4px;
 
-    font-family: "Space Grotesk", sans-serif;
+    font-family:
+        "Space Grotesk",
+        sans-serif;
 
-    font-size: 24px;
+    font-size: 26px;
+
+    letter-spacing: -0.5px;
 }
 
 .profile-card-header p {
@@ -3078,25 +3206,61 @@ body.light-theme .stat-card {
     font-size: 12px;
 }
 
+/* Active member label */
+.profile-card-header .panel-kicker {
+    color: #b5a7ff;
+}
+
+/* ============================================================
+   PROFILE STATS
+   ============================================================ */
+
 .profile-details {
+    position: relative;
+    z-index: 2;
+
     display: grid;
 
     grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+        repeat(3, minmax(0, 1fr));
 
-    gap: 11px;
+    gap: 12px;
 
     margin-top: 20px;
 }
 
+/* Individual stat */
 .profile-detail {
-    padding: 15px;
+    min-height: 92px;
 
-    border: 1px solid var(--db-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
-    border-radius: 13px;
+    padding: 17px;
 
-    background: rgba(255, 255, 255, 0.018);
+    border:
+        1px solid var(--db-border);
+
+    border-radius: 14px;
+
+    background:
+        rgba(255, 255, 255, 0.018);
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        background .2s ease;
+}
+
+.profile-detail:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(139, 92, 246, 0.25);
+
+    background:
+        rgba(139, 92, 246, 0.045);
 }
 
 .profile-detail span {
@@ -3109,6 +3273,8 @@ body.light-theme .stat-card {
     font-weight: 800;
 
     letter-spacing: 1.3px;
+
+    text-transform: uppercase;
 }
 
 .profile-detail strong {
@@ -3118,7 +3284,11 @@ body.light-theme .stat-card {
 
     color: var(--db-text);
 
-    font-size: 12px;
+    font-family:
+        "Space Grotesk",
+        sans-serif;
+
+    font-size: 24px;
 
     overflow: hidden;
 
@@ -3127,16 +3297,46 @@ body.light-theme .stat-card {
     white-space: nowrap;
 }
 
+/* Status */
 .profile-status {
     color: var(--db-green) !important;
+
+    font-size: 13px !important;
+}
+
+/* ============================================================
+   WORKSPACE / PERSONALIZATION
+   ============================================================ */
+
+.profile-info-card {
+    position: relative;
+
+    margin-top: 15px;
+
+    padding: 20px 22px;
+
+    border:
+        1px solid var(--db-border);
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.025),
+            transparent
+        ),
+        var(--db-surface);
 }
 
 .profile-info-card h3 {
-    margin: 7px 0 10px;
+    margin: 7px 0 6px;
 
-    font-family: "Space Grotesk", sans-serif;
+    font-family:
+        "Space Grotesk",
+        sans-serif;
 
-    font-size: 21px;
+    font-size: 20px;
 }
 
 .profile-info-card > p {
@@ -3144,43 +3344,172 @@ body.light-theme .stat-card {
 
     color: var(--db-muted);
 
-    font-size: 12px;
+    font-size: 11px;
 
-    line-height: 1.7;
+    line-height: 1.6;
 }
 
+/* Workspace rows */
 .profile-info-row {
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
-    margin-top: 13px;
+    margin-top: 11px;
 
-    padding: 12px 13px;
+    padding: 13px 14px;
 
-    border: 1px solid var(--db-border);
+    border:
+        1px solid var(--db-border);
 
-    border-radius: 11px;
+    border-radius: 12px;
 
-    background: rgba(255, 255, 255, 0.018);
+    background:
+        rgba(255,255,255,.018);
+
+    transition:
+        border-color .2s ease,
+        background .2s ease;
+}
+
+.profile-info-row:hover {
+    border-color:
+        rgba(139,92,246,.25);
+
+    background:
+        rgba(139,92,246,.035);
 }
 
 .profile-info-row span {
     color: #8292a8;
 
-    font-size: 11px;
+    font-size: 10px;
 }
 
 .profile-info-row strong {
     color: var(--db-text);
 
-    font-family: "Space Grotesk", sans-serif;
+    font-family:
+        "Space Grotesk",
+        sans-serif;
 
-    font-size: 13px;
+    font-size: 12px;
 }
 
+/* ============================================================
+   PROFILE PRODUCTIVITY
+   ============================================================ */
+
+.profile-productivity {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.profile-productivity-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    padding: 22px;
+
+    border: 1px solid var(--db-border);
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,0.045),
+            rgba(255,255,255,0.015)
+        );
+
+    overflow: hidden;
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.profile-productivity-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -30px -50px auto;
+
+    width: 120px;
+    height: 120px;
+
+    border-radius: 50%;
+
+    background: rgba(139, 92, 246, 0.08);
+
+    filter: blur(20px);
+
+    pointer-events: none;
+}
+
+.profile-productivity-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139, 92, 246, 0.35);
+
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.18);
+}
+
+.profile-productivity-icon {
+    width: 46px;
+    height: 46px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 12px;
+
+    background: rgba(139, 92, 246, 0.12);
+
+    color: #a99bf6;
+
+    font-size: 20px;
+}
+
+.profile-productivity-card span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.14em;
+
+    color: var(--db-muted);
+}
+
+.profile-productivity-card strong {
+    display: block;
+
+    font-size: 28px;
+    line-height: 1;
+
+    font-weight: 800;
+
+    color: var(--db-text);
+}
+
+.profile-productivity-card small {
+    display: block;
+
+    margin-top: 6px;
+
+    font-size: 10px;
+
+    color: var(--db-muted);
+}
 
 /* ============================================================
    PROFILE RESPONSIVE
@@ -3188,23 +3517,52 @@ body.light-theme .stat-card {
 
 @media (max-width: 900px) {
 
-    .profile-layout {
+    .profile-details {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .profile-productivity {
         grid-template-columns: 1fr;
     }
 
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
 
-    .profile-details {
-        grid-template-columns: 1fr;
+    .profile-card {
+        padding: 20px;
     }
 
     .profile-card-header {
         align-items: flex-start;
     }
 
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+
+        font-size: 26px;
+    }
+
+    .profile-card-header h3 {
+        font-size: 22px;
+    }
+
+    .profile-details {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-productivity-card {
+        padding: 18px;
+    }
+
+    .profile-productivity-card strong {
+        font-size: 24px;
+    }
+
 }
+
 /* ============================================================
    ENHANCED CORTEX CHAT
    ============================================================ */

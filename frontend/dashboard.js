@@ -256,7 +256,7 @@ async function loadProfile() {
 
     // PROFILE PAGE
 
-    $("profile-avatar").textContent =
+    $("profile-avatar").querySelector("span").textContent =
         initial;
 
     $("profile-name").textContent =
@@ -504,8 +504,12 @@ async function importCSV(files) {
 // ============================================================
 
 async function loadStats() {
+
     const stats =
         await api("/api/tasks/stats");
+
+
+    // DASHBOARD STATISTICS
 
     $("stat-total").textContent =
         stats.total;
@@ -524,8 +528,19 @@ async function loadStats() {
 
     $("stat-completion-rate").textContent =
         `${stats.completion_rate}% completion rate`;
-}
 
+
+    // PROFILE PRODUCTIVITY
+
+    $("profile-stat-total").textContent =
+        stats.total;
+
+    $("profile-stat-completed").textContent =
+        stats.completed;
+
+    $("profile-stat-rate").textContent =
+        `${stats.completion_rate}%`;
+}
 
 // ============================================================
 // TASK CARD
@@ -2626,8 +2641,12 @@ document.addEventListener(
         $("top-avatar")
             ?.addEventListener(
                 "click",
-                () => {
+                async () => {
+
                     switchView("profile");
+
+                    await loadProfile();
+
                 }
             );
 
