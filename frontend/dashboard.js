@@ -2,7 +2,7 @@
 // CORTEX DASHBOARD ENGINE
 // ============================================================
 
-const API_URL = "https://your-cortex-backend.onrender.com";
+const API_URL = "https://cortex-rqzd.onrender.com";
 
 const token = localStorage.getItem("access_token");
 
